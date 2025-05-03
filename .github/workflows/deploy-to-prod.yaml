@@ -1,0 +1,84 @@
+# .github/workflows/deploy-to-prod.yaml
+name: Deploy Frontend and Backend to Production Container Apps
+
+on:
+    push:
+        branches:
+            - main # Or your primary branch
+
+jobs:
+    build-and-deploy:
+        # Only run this job if the commit message starts with 'pushprod'
+        if: startsWith(github.event.head_commit.message, 'pushprod')
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            # --- Generate Timestamp Tag ---
+            - name: Generate timestamp tag
+              id: timestamp # Give this step an ID so we can reference its output
+              run: echo "TAG=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+              # This creates a tag like: 20250429-110600
+
+            # --- Login Steps (Done once) ---
+            - name: Log in to Azure Container Registry
+              uses: docker/login-action@v3
+              with:
+                  registry: ${{ secrets.AZURE_ACR_URL }} # e.g., myregistry.azurecr.io
+                  username: ${{ secrets.AZURE_SP_CLIENT_ID }}
+                  password: ${{ secrets.AZURE_SP_CLIENT_SECRET }}
+
+            - name: Log in to Azure
+              uses: azure/login@v2
+              with:
+                  creds: ${{ secrets.AZURE_CREDENTIALS_JSON }}
+
+            # --- Backend Build and Push ---
+            - name: Build and push Backend Docker image
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./${{ secrets.BACKEND_FOLDER_PATH }}
+                  file: ./${{ secrets.BACKEND_FOLDER_PATH }}/Dockerfile
+                  push: true
+                  # Use the generated timestamp from the 'timestamp' step's output
+                  tags: ${{ secrets.AZURE_ACR_URL }}/${{ secrets.AZURE_ACR_REPOSITORY_NAME_BACKEND }}:${{ steps.timestamp.outputs.TAG }}
+                  # Example tag: myregistry.azurecr.io/mybackendapp:20250429-110600
+
+            # --- Frontend Build and Push ---
+            - name: Build and push Frontend Docker image
+              uses: docker/build-push-action@v5
+              with:
+                  context: ./${{ secrets.FRONTEND_FOLDER_PATH }}
+                  file: ./${{ secrets.FRONTEND_FOLDER_PATH }}/Dockerfile
+                  push: true
+                  # Use the generated timestamp from the 'timestamp' step's output
+                  tags: ${{ secrets.AZURE_ACR_URL }}/${{ secrets.AZURE_ACR_REPOSITORY_NAME_FRONTEND }}:${{ steps.timestamp.outputs.TAG }}
+                  # Example tag: myregistry.azurecr.io/myfrontendapp:20250429-110600
+
+            # --- Backend Container App Update ---
+            - name: Update Backend Azure Container App
+              uses: azure/container-apps-deploy-action@v1
+              with:
+                  resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
+                  containerAppName: ${{ secrets.AZURE_CONTAINER_APP_NAME_BACKEND }}
+                  # Use the same timestamp tag for deployment
+                  imageToDeploy: ${{ secrets.AZURE_ACR_URL }}/${{ secrets.AZURE_ACR_REPOSITORY_NAME_BACKEND }}:${{ steps.timestamp.outputs.TAG }}
+
+            # --- Frontend Container App Update ---
+            - name: Update Frontend Azure Container App
+              uses: azure/container-apps-deploy-action@v1
+              with:
+                  resourceGroup: ${{ secrets.AZURE_RESOURCE_GROUP_NAME }}
+                  containerAppName:
+                      ${{ secrets.AZURE_CONTAINER_APP_NAME_FRONTEND }}
+                      # Use the same timestamp tag for deployment
+                  imageToDeploy: ${{ secrets.AZURE_ACR_URL }}/${{ secrets.AZURE_ACR_REPOSITORY_NAME_FRONTEND }}:${{ steps.timestamp.outputs.TAG }}
+
+            # --- Logout ---
+            - name: Azure logout
+              run: |
+                  az logout
+                  az cache purge
+                  az account clear
+              if: always() # Ensure logout happens even if previous steps fail

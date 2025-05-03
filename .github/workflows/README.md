@@ -1,0 +1,21 @@
+AZURE_ACR_URL : myregistry.azurecr.io
+AZURE_SP_CLIENT_ID : 
+AZURE_SP_CLIENT_SECRET : 
+AZURE_CREDENTIALS_JSON : 
+{
+  "clientId": "",
+  "clientSecret": "",
+  "subscriptionId": "",
+  "tenantId": ""
+}
+
+
+BACKEND_FOLDER_PATH : the folder with the backend code, from the project root
+AZURE_ACR_REPOSITORY_NAME_BACKEND
+AZURE_CONTAINER_APP_NAME_BACKEND
+
+FRONTEND_FOLDER_PATH : 
+AZURE_CONTAINER_APP_NAME_FRONTEND
+AZURE_ACR_REPOSITORY_NAME_FRONTEND
+
+AZURE_RESOURCE_GROUP_NAME
