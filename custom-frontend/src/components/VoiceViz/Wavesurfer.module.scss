@@ -1,4 +1,6 @@
 /* wrapper */
+$width: 30rem;
+
 .container {
     position: relative;
     display: flex;
@@ -11,8 +13,30 @@
 
     color: #fff;
     border-radius: 1rem;
-    width: 30rem;
+    width: 2rem;
     overflow: hidden !important;
+    transition: all 0.2s ease-in-out;
+    animation: expandWidth 1s ease-out 0.05s forwards;
+}
+
+@keyframes expandWidth {
+    from {
+        width: 2rem;
+    }
+
+    to {
+        width: $width;
+    }
+}
+
+@keyframes appear {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 /* Wavesurfer canvas */
@@ -28,6 +52,7 @@
     align-items: center;
     justify-content: center;
     height: 100%;
+    animation: appear 0.2s ease-in-out forwards;
 
     .btn {
         position: relative;

@@ -16,6 +16,9 @@ export default function WavesurferComp({ handleStopRecording, onAudioSubmit }) {
 		waveColor: "#0ea5e9",
 		progressColor: "#0284c7",
 		cursorWidth: 0,
+		// responsive: true,
+		hideScrollbar: true,
+		// fillParent: true,
 		// responsive: true,   <-- uncomment if your version of Wavesurfer supports this
 	});
 
