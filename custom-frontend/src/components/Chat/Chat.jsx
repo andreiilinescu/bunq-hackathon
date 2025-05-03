@@ -81,6 +81,25 @@ const Chat = () => {
 			return updatedHistory;
 		});
 	};
+	const reciteAudioFile = async (audioFile) => {
+		if (audioFile) {
+			try {
+				// If it's a URL:
+				const audio = new Audio(audioFile);
+				// If it's base64 you may need: new Audio(data:audio/mp3;base64,${modelReciteAudioFile});
+				await audio.play();
+			} catch (err) {
+				console.error("Audio playback failed:", err);
+			}
+		} else {
+			// load an audio file from assets
+			console.log("playing audio");
+			const audio = new Audio("../assets/recording.webm");
+			audio.play().catch((error) => {
+				console.error("Error playing audio:", error);
+			});
+		}
+	};
 	const sendMessageToAPI = async (message) => {
 		console.log("Sending message to API:", message);
 		const response = await fetch(chatURL, {
@@ -94,6 +113,8 @@ const Chat = () => {
 			}),
 		});
 		const data = await response.json();
+		const modelReciteAudioFile = data.messages[0].audio;
+		await reciteAudioFile(modelReciteAudioFile);
 		const mess = data.messages[0].text;
 		// console.log("Received response from API:", mess);
 		// Return the message directly
@@ -121,6 +142,7 @@ const Chat = () => {
 			<div className={styles.messageBarContainer}>
 				<MessageBar
 					reciteMessages={reciteMessages}
+					functionToPlayAudioAloud={reciteAudioFile}
 					onSendMessage={handleSendMessage}
 					addNewMessage={addNewMessage}
 					changeLastMessage={changeLastMessage}

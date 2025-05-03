@@ -9,6 +9,7 @@ import { useState, useRef, useEffect } from "react";
 const baseURL = import.meta.env.VITE_LOCALHOST_URL;
 const MessageBar = ({
 	reciteMessages,
+	functionToPlayAudioAloud,
 	onSendMessage,
 	addNewMessage,
 	changeLastMessage,
@@ -81,6 +82,9 @@ const MessageBar = ({
 		}
 		const data = await response.json();
 		const modelMessage = data.messages[0].text;
+		const modelReciteAudioFile = data.messages[0].audio;
+		functionToPlayAudioAloud(modelReciteAudioFile); // Play the audio aloud
+		//! take the recite file and do something with it
 		changeLastMessage({
 			role: "assistant",
 			content: modelMessage,
