@@ -52,7 +52,6 @@ Most importantly, we learned that sometimes the best solutions come from asking 
 
 ## What's next for Giving a voice to Finn
 We're excited about the future because:
-- Every day, we think of new ways to make banking even more natural
 - We see opportunities to help more people feel confident about their finances
 - We believe this is just the beginning of making banking truly accessible
 
