@@ -40,6 +40,11 @@ const MessageBar = ({ onSendMessage, addNewMessage, changeLastMessage }) => {
 			content: "Audio messagsse",
 			audio: blob,
 		});
+		addNewMessage({
+			role: "assistant",
+			content: "Thinking...",
+			audio: "hone",
+		});
 		// console.log()
 		const formData = new FormData();
 		formData.append("audio", blob, "recording.webm");
@@ -54,7 +59,7 @@ const MessageBar = ({ onSendMessage, addNewMessage, changeLastMessage }) => {
 		}
 		const data = await response.json();
 		const modelMessage = data.messages[0].text;
-		addNewMessage({
+		changeLastMessage({
 			role: "assistant",
 			content: modelMessage,
 			audio: "none",

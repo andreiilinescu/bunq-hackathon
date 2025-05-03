@@ -22,7 +22,6 @@ const Chat = () => {
 			audio: "none",
 		},
 	];
-	const audioMessageSubmit = async (resonse) => {};
 	const [chatHistory, setChatHistory] = useState(defaultMessages);
 
 	const handleSendMessage = async (newMessageContent) => {
