@@ -5,8 +5,8 @@ import SettingsVoiceIcon from "@mui/icons-material/SettingsVoice";
 import SendIcon from "@mui/icons-material/Send";
 import WaveSurferComp from "../VoiceViz/WavesurferComp";
 import { useState, useRef, useEffect } from "react";
-
-const baseURL = import.meta.env.VITE_LOCALHOST_URL;
+import { BACKEND_URL, BACKEND_URL_VOICE } from "../../constants";
+console.log(BACKEND_URL_VOICE);
 const MessageBar = ({
 	reciteMessages,
 	functionToPlayAudioAloud,
@@ -71,7 +71,7 @@ const MessageBar = ({
 		const formData = new FormData();
 		formData.append("audio", blob, "recording.webm");
 		formData.append("requestAudio", reciteMessages);
-		const response = await fetch(`${baseURL}/voice`, {
+		const response = await fetch(BACKEND_URL_VOICE, {
 			method: "POST",
 			body: formData,
 		});

@@ -3,12 +3,11 @@ import { useState, useRef } from "react";
 import MessageBar from "../MessageBar/MessageBar";
 import Message from "../Message/Message";
 import styles from "./Chat.module.scss";
-const baseURL = import.meta.env.VITE_LOCALHOST_URL;
-// console.log(baseURL);
+import { BACKEND_URL, BACKEND_URL_CHAT } from "../../constants";
+console.log(BACKEND_URL_CHAT);
 
 import CampaignIcon from "@mui/icons-material/Campaign";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
-const chatURL = `${baseURL}/chat`;
 const Chat = () => {
 	// each message has role (user, assistant) and content (string)
 	const [reciteMessages, setReciteMessages] = useState(false);
@@ -102,7 +101,7 @@ const Chat = () => {
 	};
 	const sendMessageToAPI = async (message) => {
 		console.log("Sending message to API:", message);
-		const response = await fetch(chatURL, {
+		const response = await fetch(BACKEND_URL_CHAT, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
