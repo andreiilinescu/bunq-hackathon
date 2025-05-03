@@ -80,18 +80,44 @@ const MessageBar = ({
 		} else {
 			console.log("Audio sent successfully!");
 		}
-		const data = await response.json();
-		const modelMessage = data.messages[0].text;
-		const modelReciteAudioFile = data.messages[0].audio;
-		functionToPlayAudioAloud(modelReciteAudioFile); // Play the audio aloud
-		//! take the recite file and do something with it
+
+		const responseData = await response.json();
+    
+		// Get the text message from the response
+		const textMessage = responseData.messages[responseData.messages.length - 1].text;
+		
+		if (reciteMessages && responseData.audio) {
+			// Convert base64 audio to a playable format
+			const audioBase64 = responseData.audio;
+			const audioBlob = base64ToBlob(audioBase64, 'audio/mp3');
+			const audioUrl = URL.createObjectURL(audioBlob);
+			await functionToPlayAudioAloud(audioUrl);
+		}
+
 		changeLastMessage({
 			role: "assistant",
-			content: modelMessage,
+			content: textMessage,
 			audio: "none",
 		});
 	};
-
+	const base64ToBlob = (base64, mimeType) => {
+		const byteCharacters = atob(base64);
+		const byteArrays = [];
+		
+		for (let i = 0; i < byteCharacters.length; i += 512) {
+			const slice = byteCharacters.slice(i, i + 512);
+			const byteNumbers = new Array(slice.length);
+			
+			for (let j = 0; j < slice.length; j++) {
+				byteNumbers[j] = slice.charCodeAt(j);
+			}
+			
+			const byteArray = new Uint8Array(byteNumbers);
+			byteArrays.push(byteArray);
+		}
+		
+		return new Blob(byteArrays, { type: mimeType });
+	};
 	const handleSubmit = () => {
 		if (message.trim()) {
 			onSendMessage(message); // Call the function passed from the parent component

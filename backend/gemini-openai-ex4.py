@@ -6,7 +6,8 @@ from __future__ import annotations
 
 import asyncio, os, uuid
 from typing import Any, List
-
+import time
+import base64
 from agents import (
     Agent,
     ItemHelpers,
@@ -19,10 +20,18 @@ from agents import (
     set_tracing_disabled,
 )
 from openai import AsyncOpenAI
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response, send_file
 from flask_cors import CORS
 from google.cloud.speech_v2 import SpeechClient
 from google.cloud.speech_v2.types import cloud_speech
+from google.cloud.texttospeech_v1 import TextToSpeechClient
+from google.cloud.texttospeech_v1.types import (
+    SynthesisInput,
+    VoiceSelectionParams,
+    SsmlVoiceGender,
+    AudioConfig,
+    AudioEncoding,
+)
 
 # ---------------------------------------------------------------------------
 # 0  Import Bunq tools & context model from your helper module
@@ -49,7 +58,6 @@ CORS(app)
 # ---------------------------------------------------------------------------
 BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 API_KEY = os.getenv("GEMINI_API_KEY")
-print(f"API key: {API_KEY}")
 MODEL_NAME = "gemini-2.0-flash"
 
 client = AsyncOpenAI(base_url=BASE_URL, api_key=API_KEY)
@@ -133,18 +141,7 @@ async def cli_main():
         conversation[:] = result.to_input_list()  # clean history
 
 
-# ---------------------------------------------------------------------------
-# 6  Flask REST endpoints
-# ---------------------------------------------------------------------------
-@app.post("/chat")
-def chat():
-    user_msg = request.json.get("message", "").strip()
-    print(f"User: {user_msg}")
-    if not user_msg:
-        return jsonify({"error": "Empty message"}), 400
-
-    conversation.append({"role": "user", "content": user_msg})
-
+def finn_loop():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
@@ -170,7 +167,112 @@ def chat():
 
     conversation[:] = result.to_input_list()
     print(f"Finn: {messages[-1]['text']}")
-    return jsonify({"messages": messages, "events": events})
+    return {"messages": messages, "events": events}
+
+
+def drop_emojis(text: str) -> str:
+    """
+    Remove emojis from the text.
+
+    Args:
+        text (str): The input text.
+
+    Returns:
+        str: The text without emojis.
+    """
+    return "".join(c for c in text if c.isascii() or c.isspace())
+
+
+def synthesize_speech(
+    text: str,
+    output_file: str = None,
+    language_code: str = "en-US",
+    voice_name: str = "en-US-Studio-O",
+):
+    """
+    Synthesize speech from text using Google Cloud Text-to-Speech API.
+
+    Args:
+        text (str): The text to synthesize.
+        output_file (str, optional): Output file path. If None, audio data is returned.
+        language_code (str, optional): Language code. Defaults to "en-US".
+        voice_name (str, optional): Voice name. Defaults to "en-US-Studio-O" (natural female voice).
+
+    Returns:
+        bytes or str: Audio content as bytes if output_file is None, otherwise the file path.
+    """
+    try:
+        # Create the Text-to-Speech client
+        client = TextToSpeechClient()
+
+        # Set the text input to be synthesized
+        synthesis_input = SynthesisInput(text=text)
+
+        # Build the voice request
+        voice = VoiceSelectionParams(
+            language_code=language_code,
+            ssml_gender=SsmlVoiceGender.MALE,
+        )
+
+        # Select the audio format - MP3 for browser compatibility
+        audio_config = AudioConfig(
+            audio_encoding=AudioEncoding.MP3,
+            speaking_rate=1.0,
+            pitch=5.0,  # Default pitch
+        )
+
+        # Perform the synthesis request
+        response = client.synthesize_speech(
+            input=synthesis_input, voice=voice, audio_config=audio_config
+        )
+
+        # If output file is specified, save the audio
+        if output_file:
+            with open(output_file, "wb") as out:
+                out.write(response.audio_content)
+            print(f"Audio content written to '{output_file}'")
+            return output_file
+
+        # Otherwise, return the audio content
+        return response.audio_content
+
+    except Exception as e:
+        print(f"Error synthesizing speech: {str(e)}")
+        raise e
+
+
+# ---------------------------------------------------------------------------
+# 6  Flask REST endpoints
+# ---------------------------------------------------------------------------
+@app.post("/chat")
+def chat():
+    user_msg = request.json.get("message", "").strip()
+    voice_bool = request.json.get("requestAudio", False)
+    if not user_msg:
+        return jsonify({"error": "Empty message"}), 400
+
+    conversation.append({"role": "user", "content": user_msg})
+    with trace("Bunq‑REST"):
+        time.sleep(3)
+        res = finn_loop()
+
+    if voice_bool:
+
+        # Get the last message from the response
+        last_message = res["messages"][-1]["text"]
+        # Remove emojis from the text
+        last_message = drop_emojis(last_message)
+        # Synthesize speech and save to a file
+        audio_file = synthesize_speech(
+            text=last_message,
+            language_code="en-US",
+            voice_name="en-US-Studio-O",
+        )
+        # Add the audio file path to the response
+        res["audio"] = base64.b64encode(audio_file).decode("utf-8")
+        return jsonify(res)
+    else:
+        return jsonify(res)
 
 
 @app.post("/reset")
@@ -182,8 +284,9 @@ def reset():
 
 @app.post("/voice")
 def process_voice():
-    print(request)  # This is the Flask request object
     audio = request.files.get("audio")  # Use files.get instead of form.get
+    voice_bool = request.form.get("requestAudio", False)
+    print(voice_bool)
     if not audio:
         return jsonify({"error": "No audio file provided"}), 400
 
@@ -198,6 +301,7 @@ def process_voice():
 
         # Configure audio
         with open(temp_filename, "rb") as audio_file:
+            time.sleep(3)
             content = audio_file.read()
 
         speech_client = SpeechClient()
@@ -240,40 +344,31 @@ def process_voice():
         # Process the transcribed text through the chat system
         conversation.append({"role": "user", "content": transcribed_text})
 
-        # Process with the Finn agent
-        inner_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(inner_loop)
-        try:
-            result = inner_loop.run_until_complete(
-                Runner.run(
-                    finn_agent,
-                    input=conversation,
-                    context=context,
-                )
-            )
-        finally:
-            inner_loop.close()
-
-        # Build response payload - same as in chat endpoint
-        messages, events = [], []
-        for i in result.new_items:
-            if isinstance(i, MessageOutputItem):
-                messages.append({"text": ItemHelpers.text_message_output(i)})
-            elif isinstance(i, ToolCallItem):
-                events.append({"type": "tool_call", "tool": i.type})
-            elif isinstance(i, ToolCallOutputItem):
-                events.append({"type": "tool_result", "output": i.output})
-
-        conversation[:] = result.to_input_list()
+        with trace("Bunq‑REST"):
+            result = finn_loop()
 
         # Return the same response format as the chat endpoint
-        return jsonify(
-            {
-                "messages": messages,
-                "events": events,
-                "transcription": transcribed_text,  # Include the transcription for debugging
-            }
-        )
+        res = {
+            **result,
+            "transcription": transcribed_text,  # Include the transcription for debugging
+        }
+        if voice_bool:
+
+            # Get the last message from the response
+            last_message = res["messages"][-1]["text"]
+            # Remove emojis from the text
+            last_message = drop_emojis(last_message)
+            # Synthesize speech and save to a file
+            audio_file = synthesize_speech(
+                text=last_message,
+                language_code="en-US",
+                voice_name="en-US-Studio-O",
+            )
+            # Add the audio file path to the response
+            res["audio"] = base64.b64encode(audio_file).decode("utf-8")
+            return jsonify(res)
+        else:
+            return jsonify(res)
 
     except Exception as e:
         import traceback

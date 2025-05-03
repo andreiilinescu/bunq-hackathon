@@ -18,6 +18,7 @@ from agents import function_tool, RunContextWrapper
 import re
 from dotenv import load_dotenv
 import requests
+import time
 
 load_dotenv()
 
@@ -25,15 +26,17 @@ BUNQ_API_KEY = os.getenv("BUNQ_API_KEY")  # production or sandbox key
 DEVICE_DESCRIPTION = os.getenv("DEVICE_DESC", "Finn‑CLI")
 ENV = ApiEnvironmentType.SANDBOX  # swap to .SANDBOX for tests
 
-
+time.sleep(3)
+print("Loading bunq API context...")
 _api_context = ApiContext.create(ENV, BUNQ_API_KEY, DEVICE_DESCRIPTION)
 _api_context.ensure_session_active()  # log in / refresh session
 _api_context.save()  # cache token & device cert
+# time.sleep(3)
 BunqContext.load_api_context(_api_context)
-
+# time.sleep(3)
 _user_context = BunqContext.user_context()
+# time.sleep(3)
 accounts = MonetaryAccountBankApiObject.list().value
-print(accounts)
 # ------------------------------------------------------------------------------
 # 1.  Shared conversation context model
 # ------------------------------------------------------------------------------
@@ -74,7 +77,8 @@ def _account_balance(account_id: str) -> str:
 
 
 @function_tool(
-    description_override="Return a newline‑separated list of the user's active bunq monetary accounts in the format 'id: description'. No arguments."
+    description_override="Return a newline list of the user’s monetary accounts in the form "
+    "‘<id>: <description>  • IBAN: NL…’.  No arguments."
 )
 def list_bunq_accounts(context: RunContextWrapper[BunqAgentContext]) -> str:
     accounts = _monetary_accounts()
@@ -98,7 +102,12 @@ def list_bunq_accounts(context: RunContextWrapper[BunqAgentContext]) -> str:
     return "\n".join(lines) if lines else "No accounts found."
 
 
-@function_tool
+@function_tool(
+    description_override="Resolve an account’s *description name* (e.g. “Travel”) to its numeric "
+    "ID.  Args: account_name (str).  Returns “Account id: <id>” or "
+    "“Account not found”.  Use this before other tools when you only have a "
+    "name."
+)
 def get_bunq_account(account_name: str) -> str:
     """Get the id of a bunq account. Args: String account name (str). Returns 'Account id'."""
     accounts = _monetary_accounts()
@@ -108,14 +117,21 @@ def get_bunq_account(account_name: str) -> str:
     return "Account not found."
 
 
-@function_tool
+@function_tool(
+    description_override="Real‑time balance lookup.  Args: account_id (str).  Returns "
+    "‘Balance for <id>: €<value>’."
+)
 def get_bunq_balance(account_id: str) -> str:
     """Look up the real-time balance of a bunq account. Args: account_id (str). Returns 'Balance for id: €value'."""
     balance = _account_balance(account_id)
     return f"Balance for {account_id}: €{balance}"
 
 
-@function_tool
+@function_tool(
+    description_override="Fetch recent transactions.  Args: account_id (str), limit (int, default 10). "
+    "Returns up to <limit> lines formatted "
+    "‘YYYY‑MM‑DD: ±€amount – description’ newest→oldest."
+)
 def get_transaction_history(account_id: str, limit: int = 10) -> str:
     """Fetch recent transcations for an account. Args: account_id (str), limit (int, default 10). Returns up to <limit> lines formatted 'YYYY-MM-DD: ±€amount – description' sorted newest→oldest."""
     pagination = Pagination()
@@ -125,7 +141,12 @@ def get_transaction_history(account_id: str, limit: int = 10) -> str:
     return "\n".join(out) or "No transactions."
 
 
-@function_tool
+@function_tool(
+    description_override="Send money. **Call only after the user explicitly confirmed.** "
+    "Args: from_account (str ID), to_alias (IBAN/email/phone), amount (float), "
+    "currency (str, default ‘EUR’), optional description. "
+    "Returns a success receipt or error string."
+)
 def create_payment(
     context: RunContextWrapper[BunqAgentContext],
     from_account: str,
@@ -191,7 +212,11 @@ def create_payment(
         return f"❌ Payment failed: {err_msg}"
 
 
-@function_tool
+@function_tool(
+    description_override="Create a public bunq.me payment link (share‑able). "
+    "Args: amount (float), currency (str, default ‘EUR’), optional "
+    "monetary_account_id, description. Returns the URL and summary."
+)
 def bunqme_tab(
     context: RunContextWrapper[BunqAgentContext],
     amount: float,
@@ -227,7 +252,11 @@ def bunqme_tab(
         return f"❌ Tab creation failed: {err_msg}"
 
 
-@function_tool
+@function_tool(
+    description_override="Get an indicative FX spot rate. Args: base_currency (str), "
+    "target_currency (str). Returns ‘1 <base> = <rate> <target>’. "
+    "Use for quick reference only."
+)
 def get_exchange_rate(base_currency: str, target_currency: str) -> str:
     """
     Get the current exchange rate between two currencies using a free exchange rate API.
@@ -251,7 +280,10 @@ def get_exchange_rate(base_currency: str, target_currency: str) -> str:
         return f"❌ Failed to fetch exchange rate: {str(e)}"
 
 
-@function_tool
+@function_tool(
+    description_override="Show the current user’s profile (ID, name, nationality, preferred "
+    "currency).  No arguments."
+)
 def get_user_info() -> str:
     """
     Get the current user's information(name,user_id,nationality,preffered_currency).
