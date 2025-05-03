@@ -1,64 +1,64 @@
 /* wrapper */
 .container {
-    position: absolute;
+    position: relative;
     display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-    padding: 1rem;
-    max-width: 28rem;
-    margin-inline: auto;
-    background: var(--user_message_color);
+    flex-direction: row;
+    align-items: left;
+    justify-content: center;
+    // top: -50%;
+    // left: 0;
+    // padding: 1rem;
+
     color: #fff;
     border-radius: 1rem;
-    width: 20rem;
+    width: 32.5rem;
+    overflow: hidden !important;
 }
 
 /* Wavesurfer canvas */
 .waveform {
     width: 100%;
+    background: transparent;
+    overflow: hidden !important;
 }
 
-/* controls */
-.btnRow {
+.btnContainer {
     display: flex;
-    justify-content: space-between;
     flex-direction: row;
-    width: 100%;
-    gap: 0.5rem;
-}
+    align-items: center;
+    justify-content: center;
+    height: 100%;
 
-.btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 0.5rem;
-    background: var(--accent_color);
-    font-weight: 600;
-    color: inherit;
-    cursor: pointer;
-    transition: background 0.15s;
-}
+    .btn {
+        position: relative;
+        top: -0.2rem;
+        margin-top: 0.25rem;
+        margin-right: 0.25rem;
+        width: 2rem;
+        height: 100%;
+        // margin: 0.5rem;
+        // margin-left: 0.5rem;
+        border-radius: 1rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: transparent;
 
-.btn:hover:not(:disabled) {
-    background: #0284c7;
-}
+        outline: none;
+        color: var(--text_color);
+        border: none;
+        transition: all 0.2s ease-in-out;
+        background-color: var(--accent_color);
 
-.btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
+        &:hover {
+            cursor: pointer;
 
-/* timer read‑out */
-.timer {
-    font-size: 0.85rem;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.05em;
-}
+            // background-color: var(--accent_color);
+            // color: var(--text_color);
+        }
+    }
 
-.escButton {
-    width: 1rem;
-    height: 1rem;
-    position: absolute;
-    right: 0;
-    top: 0;
+    .sendButton {}
+
+    .escButton {}
 }

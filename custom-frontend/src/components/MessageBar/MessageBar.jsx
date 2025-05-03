@@ -12,7 +12,14 @@ const MessageBar = ({ onSendMessage }) => {
 	const handleInputChange = (event) => {
 		setMessage(event.target.value);
 	};
-
+	const sendRecording = (blob) => {
+		// Handle sending the recorded audio blob here
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = "recording.webm";
+		a.click();
+	};
 	const handleSubmit = () => {
 		if (message.trim()) {
 			onSendMessage(message); // Call the function passed from the parent component
@@ -32,11 +39,21 @@ const MessageBar = ({ onSendMessage }) => {
 	const handleStopRecording = () => {
 		setIsRecording(false); // Stop recording
 	};
+
 	return (
-		<div className={styles.container}>
+		<div
+			className={`${styles.container} ${
+				isRecording ? styles.recording : ""
+			}`}
+		>
 			<div>
 				{isRecording && (
-					<WaveSurferComp handleStopRecording={handleStopRecording} />
+					<div className={styles.waveformContainer}>
+						<WaveSurferComp
+							handleStopRecording={handleStopRecording}
+							onAudioSubmit={sendRecording}
+						/>
+					</div>
 				)}
 				{!isRecording && (
 					<div
@@ -47,15 +64,16 @@ const MessageBar = ({ onSendMessage }) => {
 					</div>
 				)}
 			</div>
-
-			<input
-				type="text"
-				placeholder="Write a message..."
-				className={styles.inputField}
-				value={message}
-				onChange={handleInputChange}
-				onKeyDown={handleKeyDown} // Add key down handler
-			/>
+			{!isRecording && (
+				<input
+					type="text"
+					placeholder="Write a message..."
+					className={styles.inputField}
+					value={message}
+					onChange={handleInputChange}
+					onKeyDown={handleKeyDown} // Add key down handler
+				/>
+			)}
 			<button className={styles.sendButton} onClick={handleSubmit}>
 				<div className={styles.sendIconContainer}>
 					<SendIcon />

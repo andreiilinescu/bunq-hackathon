@@ -1,129 +1,79 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useWavesurfer } from "@wavesurfer/react";
 import RecordPlugin from "wavesurfer.js/dist/plugins/record.esm.js";
 import styles from "./Wavesurfer.module.scss";
-
-export default function WavesurferComp({ handleStopRecording }) {
+import CloseIcon from "@mui/icons-material/Close";
+import DoneIcon from "@mui/icons-material/Done";
+export default function WavesurferComp({ handleStopRecording, onAudioSubmit }) {
 	const containerRef = useRef(null);
-
-	// UI state
 	const [rec, setRec] = useState(null);
-	const [blobUrl, setBlobUrl] = useState(null);
-	const [isRecording, setRecFlag] = useState(false);
 
-	// Wavesurfer instance – classic (non‑bars) renderer
-	const { wavesurfer, isPlaying, currentTime } = useWavesurfer({
+	// Basic waveform renderer
+	const { wavesurfer } = useWavesurfer({
 		container: containerRef,
-		height: 200,
+		height: 30,
 		waveColor: "#0ea5e9",
 		progressColor: "#0284c7",
 		cursorWidth: 0,
-		barWidth: 0, // line style; bars don’t live‑update
-		dragToSeek: false,
 	});
-	// Attach Record plugin once Wavesurfer is ready
+
+	// Set‑up Record plugin and auto‑start recording
 	useEffect(() => {
 		if (!wavesurfer) return;
 
 		const record = wavesurfer.registerPlugin(
 			RecordPlugin.create({
 				continuousWaveform: true,
-				mediaRecorderTimeslice: 200, // refresh ~5×/s for live view
+				mediaRecorderTimeslice: 200,
 				renderRecordedAudio: false,
 			})
 		);
+		setRec(record);
 
-		record.on("record-start", () => setRecFlag(true));
-
+		// Log the final blob when recording stops (checkButton)
 		record.on("record-end", (blob) => {
-			setRecFlag(false);
-			const url = URL.createObjectURL(blob);
-			setBlobUrl(url);
-			wavesurfer.load(url);
+			console.log("Recording finished:", blob);
 		});
 
-		setRec(record);
-		return () => record.destroy();
-	}, [wavesurfer]);
-
-	useEffect(() => {
-		if (!rec) return;
+		// Auto‑start as soon as a mic is available
 		(async () => {
 			const [{ deviceId } = {}] =
 				await RecordPlugin.getAvailableAudioDevices();
-			await rec.startRecording({ deviceId }); // ⬅️ auto‑start
+			await record.startRecording({ deviceId });
 		})();
-	}, [rec]);
-	// handlers
-	const toggleRec = useCallback(async () => {
-		if (!rec) return;
 
-		if (rec.isRecording()) {
-			rec.stopRecording();
-		} else {
-			const [{ deviceId } = {}] =
-				await RecordPlugin.getAvailableAudioDevices();
-			await rec.startRecording({ deviceId });
-		}
-	}, [rec]);
-
-	const togglePlay = useCallback(() => {
-		if (!wavesurfer) return;
-
-		// If the cursor is at (or very near) the end, jump back to 0 s
-		const endThreshold = 0.05; // seconds
-		if (
-			wavesurfer.getDuration() &&
-			wavesurfer.getCurrentTime() >=
-				wavesurfer.getDuration() - endThreshold
-		) {
-			wavesurfer.seekTo(0);
-		}
-
-		wavesurfer.playPause();
+		return () => record.destroy();
 	}, [wavesurfer]);
 
-	const downloadRecording = () => {
-		if (!blobUrl) return;
-		const a = document.createElement("a");
-		a.href = blobUrl;
-		a.download = "recording.webm";
-		a.click();
+	const submit = async () => {
+		if (!rec) return;
+		if (rec.isRecording()) {
+			const blob = await rec.stopRecording();
+			// console.log("✅ Prompt would be sent with this blob:", blob);
+			onAudioSubmit(blob);
+		}
 	};
 
 	return (
 		<div className={styles.container}>
-			<div ref={containerRef} className={styles.waveform} />
-
-			<div className={styles.btnRow}>
-				<button className={styles.btn} onClick={toggleRec}>
-					{isRecording ? "Stop" : "Record"}
+			<div className={styles.btnContainer}>
+				<button
+					className={`${styles.sendButton}  ${styles.btn} `}
+					onClick={submit}
+					aria-label="Confirm"
+				>
+					<DoneIcon />
 				</button>
 
 				<button
-					className={styles.btn}
-					onClick={togglePlay}
-					disabled={!blobUrl}
+					className={`${styles.escButton} ${styles.btn}`}
+					onClick={handleStopRecording}
+					aria-label="Cancel"
 				>
-					{isPlaying ? "Pause" : "Play"}
-				</button>
-
-				<button
-					className={styles.btn}
-					onClick={downloadRecording}
-					disabled={!blobUrl}
-				>
-					Download
+					<CloseIcon />
 				</button>
 			</div>
-
-			{blobUrl && (
-				<span className={styles.timer}>{currentTime.toFixed(1)} s</span>
-			)}
-			<button
-				className={styles.escButton}
-				onClick={handleStopRecording}
-			></button>
+			<div ref={containerRef} className={styles.waveform} />
 		</div>
 	);
 }
