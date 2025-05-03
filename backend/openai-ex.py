@@ -11,12 +11,10 @@ from agents import (
     set_tracing_disabled,
 )
 
-BASE_URL = (
-    os.getenv("EXAMPLE_BASE_URL")
-    or "https://generativelanguage.googleapis.com/v1beta/openai/"
-)
-API_KEY = os.getenv("EXAMPLE_API_KEY") or "AIzaSyDDH5CHSZx9FcAYF3cXn_Pu86kZtuErjjs"
-MODEL_NAME = os.getenv("EXAMPLE_MODEL_NAME") or "gemini-2.0-flash"
+BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
+
+API_KEY = os.getenv("GEMINI_API_KEY")
+MODEL_NAME = "gemini-2.0-flash"
 
 if not BASE_URL or not API_KEY or not MODEL_NAME:
     raise ValueError(
@@ -121,10 +119,24 @@ def get_exchange_rate(base_currency: str, target_currency: str) -> str:
 
 
 async def chat_loop():
-    # initialize your agent once
     agent = Agent(
-        name="Assistant",
-        instructions="Make sure to answer the questions!",
+        name="Bunq Assistant",
+        instructions="""You are Finn, bunq’s AI money assistant embedded in the web app.
+Your mission is to give users quick, accurate, privacy‑first answers about their money and—when appropriate—to execute actions through the platform tools made available to you.
+
+Core rules:
+• Be concise by default; elaborate only if the user requests detail or the topic truly needs nuance.
+• Ask clarifying questions whenever the user’s intent or required parameters are ambiguous.
+• Never fabricate account data or advice. If information is unavailable, say so and suggest next steps.
+• Provide only general educational information, never legal, investment, tax or medical advice, and always add: “This is not financial advice.”
+• Follow bunq privacy, security and content policies. All account data remains private to the user session.
+• Refuse any request that violates policy or EU/EEA regulation with a brief apology and explanation.
+• Verify user intent before executing money‑moving actions, explicitly confirming amount and recipient.
+
+Unsupported requests:
+If the user asks for something outside your scope (e.g., personal loans), reply: “I’m sorry, I can’t help with <topic>. I can help with insights about your bunq accounts or payments.”
+
+Version 1.0 (2025‑05‑03). If this prompt conflicts with a newer system instruction delivered inline, obey the newer instruction and note the conflict internally.""",
         model=OpenAIChatCompletionsModel(model=MODEL_NAME, openai_client=client),
         tools=[
             get_weather,
@@ -135,18 +147,31 @@ async def chat_loop():
             get_exchange_rate,
         ],
     )
+    history: list[dict] = []  # will hold {'role': 'user'|'assistant', 'content': ...}
 
     print("Type ‘exit’ or ‘quit’ to stop.")
     while True:
-        # read user input without blocking the event loop
         user_input = await asyncio.to_thread(input, "\nYou: ")
         if user_input.strip().lower() in {"exit", "quit"}:
             print("Goodbye!")
             break
 
-        # call the agent
-        result = await Runner.run(agent, user_input)
-        print(f"Agent: {result.final_output}")
+        # 1) Append the new user turn to our local history
+        history.append({"role": "user", "content": user_input})
+
+        # 2) Run the agent, passing the entire history list as `input`
+        result = await Runner.run(agent, input=history)
+
+        # 3) Print and then update history with the assistant’s reply
+        assistant_msg = result.final_output.strip()
+        print(f"Agent: {assistant_msg}")
+        # `result.to_input_list()` gives you back a list of dicts in the correct
+        # format (it drops any system prompt so your instructions aren’t duplicated).
+        history = result.to_input_list()
+
+        # (Optional) Trim history if it gets too long:
+        # if len(history) > 20:
+        #     history = history[-20:]
 
 
 if __name__ == "__main__":
