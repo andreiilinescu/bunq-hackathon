@@ -57,7 +57,6 @@ const Chat = () => {
 		setChatHistory((prevHistory) => [...prevHistory, message]);
 
 		// Scroll to the bottom of the chat history
-		scrollToRef(endOfMessagesRef);
 	};
 	const scrollToRef = (ref) => {
 		if (ref.current) {
@@ -77,7 +76,6 @@ const Chat = () => {
 			updatedHistory[updatedHistory.length - 1] = message;
 			return updatedHistory;
 		});
-		scrollToRef(endOfMessagesRef);
 	};
 	const sendMessageToAPI = async (message) => {
 		console.log("Sending message to API:", message);

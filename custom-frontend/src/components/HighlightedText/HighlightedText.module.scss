@@ -1,0 +1,56 @@
+$color1: #238647; //
+
+$color2: #2F9B47;
+$color3: #62B64F;
+
+$color4: #89CC53;
+$color5: #3DB8AD;
+$color6: #3394D7;
+$color7: #2872BC;
+$color8: #1D5C84;
+
+$color9: #993233;
+$color10: #E13030;
+$color11: #F28825;
+$color12: #F5C836;
+
+.highlight {
+    // background-color: yellow; // adjust to your design
+    font-weight: bold;
+    /* Text styling */
+    font-weight: bold;
+    // $textCol: var(--text_color);
+    /* Gradient setup */
+    background: linear-gradient(60deg,
+            $color1 0%,
+            $color2 8.33%,
+            $color3 16.66%,
+            $color4 24.99%,
+            $color5 33.32%,
+            $color6 41.65%,
+            $color7 49.98%,
+            $color8 58.31%,
+            $color9 66.64%,
+            $color10 74.97%,
+            $color11 83.3%,
+            $color12 91.63%,
+            $color1 100%);
+    background-size: 200% 100%;
+
+    /* Make the gradient apply to text only */
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    /* Animation */
+    animation: gradientMove 5s linear infinite;
+}
+
+@keyframes gradientMove {
+    0% {
+        background-position: 0% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}

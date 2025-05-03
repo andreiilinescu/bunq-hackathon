@@ -1,6 +1,7 @@
 import React from "react";
 import styles from "./Message.module.scss";
 import AudioPlayer from "../AudioPlayer/AudioPlayer";
+import HighlightedText from "../HighlightedText/HighlightedText";
 const Message = ({ message, role, audio }) => {
 	// Determine alignment style based on role
 
@@ -21,7 +22,12 @@ const Message = ({ message, role, audio }) => {
 				</>
 			) : (
 				<div className={`${styles.assistantMessage} ${styles.message}`}>
-					<p className={styles.messageP}>{message}</p>
+					<p className={styles.messageP}>
+						<HighlightedText
+							text={message}
+							highlightWord={"bunq"}
+						/>
+					</p>
 				</div>
 			)}
 		</div>
