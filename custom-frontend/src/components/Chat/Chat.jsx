@@ -3,7 +3,9 @@ import { useState } from "react";
 import MessageBar from "../MessageBar/MessageBar";
 import Message from "../Message/Message";
 import styles from "./Chat.module.scss";
-
+const baseURL = import.meta.env.VITE_LOCALHOST_URL;
+console.log(baseURL);
+const chatURL = `${baseURL}/chat`;
 const Chat = () => {
 	// each message has role (user, assistant) and content (string)
 	const defaultMessages = [
@@ -17,17 +19,34 @@ const Chat = () => {
 	];
 	const [chatHistory, setChatHistory] = useState(defaultMessages);
 
-	const handleSendMessage = (newMessageContent) => {
+	const handleSendMessage = async (newMessageContent) => {
 		const newMessage = { role: "user", content: newMessageContent };
 		//* new user message comes in, add it to chat and make a message for the assistant
 		setChatHistory((prevHistory) => [...prevHistory, newMessage]);
+
+		const responseMessage = await sendMessageToAPI(newMessageContent);
+		console.log("responseMessage", responseMessage);
 		const newAssistantMessage = {
 			role: "assistant",
-			content: "This is a placeholder response from the assistant.",
+			content: responseMessage,
 		};
 		setChatHistory((prevHistory) => [...prevHistory, newAssistantMessage]);
 	};
-
+	const sendMessageToAPI = async (message) => {
+		console.log("Sending message to API:", message);
+		const response = await fetch(chatURL, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ message: message }),
+		});
+		const data = await response.json();
+		const mess = data.messages[0].text;
+		// console.log("Received response from API:", mess);
+		// Return the message directly
+		return mess;
+	};
 	return (
 		<div className={styles.chatContainer}>
 			<div className={styles.chatHistory}>

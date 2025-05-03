@@ -16,6 +16,9 @@ from pydantic import BaseModel
 import os
 from agents import function_tool, RunContextWrapper
 import re
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BUNQ_API_KEY = os.getenv("BUNQ_API_KEY")  # production or sandbox key
 DEVICE_DESCRIPTION = os.getenv("DEVICE_DESC", "Finn‑CLI")
