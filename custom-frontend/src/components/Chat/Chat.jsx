@@ -9,12 +9,17 @@ const chatURL = `${baseURL}/chat`;
 const Chat = () => {
 	// each message has role (user, assistant) and content (string)
 	const defaultMessages = [
-		{ role: "assistant", content: "Hello! How can I help you today?" },
-		{ role: "user", content: "I need help with my account" },
+		{
+			role: "assistant",
+			content: "Hello! How can I help you today?",
+			audio: "none",
+		},
+		{ role: "user", content: "I need help with my account", audio: "none" },
 		{
 			role: "assistant",
 			content:
 				"Sure, I can help with that. What seems to be the problem?",
+			audio: "none",
 		},
 	];
 	const audioMessageSubmit = async (resonse) => {};
@@ -28,6 +33,7 @@ const Chat = () => {
 		const thinkingMessage = {
 			role: "assistant",
 			content: "Thinking...",
+			audio: "none",
 		};
 		addNewMessage(thinkingMessage);
 
@@ -37,6 +43,7 @@ const Chat = () => {
 		const newAssistantMessage = {
 			role: "assistant",
 			content: responseMessage,
+			audio: "none",
 		};
 		//* remove the assistant's "thinking..." message and add the new one
 		changeLastMessage(newAssistantMessage);
@@ -76,6 +83,7 @@ const Chat = () => {
 						key={index}
 						message={message.content}
 						role={message.role}
+						audio={message.audio}
 					/>
 				))}
 			</div>

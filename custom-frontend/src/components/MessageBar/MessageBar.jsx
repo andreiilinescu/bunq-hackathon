@@ -37,8 +37,10 @@ const MessageBar = ({ onSendMessage, addNewMessage, changeLastMessage }) => {
 	const sendRecordingToAPI = async (blob) => {
 		addNewMessage({
 			role: "user",
-			content: "Audio message",
+			content: "Audio messagsse",
+			audio: blob,
 		});
+		// console.log()
 		const formData = new FormData();
 		formData.append("audio", blob, "recording.webm");
 		const response = await fetch(`${baseURL}/voice`, {
@@ -55,6 +57,7 @@ const MessageBar = ({ onSendMessage, addNewMessage, changeLastMessage }) => {
 		addNewMessage({
 			role: "assistant",
 			content: modelMessage,
+			audio: "none",
 		});
 	};
 

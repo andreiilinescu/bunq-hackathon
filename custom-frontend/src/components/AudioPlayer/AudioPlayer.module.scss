@@ -1,0 +1,40 @@
+.audioPlayerContainer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem; // Space between button and waveform
+    padding: 0.5rem;
+    background-color: var(--user_message_color); // Match user message background
+    border-radius: 1rem; // Rounded corners
+    width: fit-content; // Adjust width to content
+    max-width: 300px; // Example max width
+}
+
+.playButton {
+    background: none;
+    border: none;
+    color: var(--text_color); // White icon
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    border-radius: 50%;
+    transition: background-color 0.2s ease-in-out;
+
+    &:hover:not(:disabled) {
+        background-color: rgba(255,
+                255,
+                255,
+                0.1); // Slight highlight on hover
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+}
+
+.waveform {
+    flex-grow: 1; // Waveform takes remaining space
+    min-width: 150px; // Ensure minimum width for waveform display
+}

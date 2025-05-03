@@ -5,6 +5,8 @@
 
     // width: 100%;
     .message {
+
+        // display: flex;
         .messageP {
             display: inline-block;
             padding-top: var(--userMessagePaddingTB);
@@ -25,6 +27,11 @@
             text-align: left;
         }
 
+        .audioPlayerContainer {
+            display: flex;
+            justify-content: flex-end;
+            margin: 1rem;
+        }
     }
 
     .assistantMessage {
