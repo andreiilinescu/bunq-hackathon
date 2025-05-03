@@ -196,7 +196,7 @@ def process_voice():
 # 7  Entry point
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    if os.getenv("SERVER_MODE", "0") in {"1", "true", "yes"}:
+    if os.getenv("SERVER_MODE", "1") in {"1", "true", "yes"}:
         print("Serving on :5005 …")
         app.run(host="0.0.0.0", port=5005, debug=True)
     else:
