@@ -80,7 +80,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color: var(--accent_color);
+        background-color: var(--background_color);
         border: none;
         border-radius: 0.75rem;
         $paddingLR: 0.25rem;
@@ -97,7 +97,7 @@
         // left: 0.25rem;
 
         &:hover {
-            background-color: red;
+            background-color: var(--user_message_color);
             cursor: pointer;
         }
 
@@ -106,6 +106,7 @@
             justify-self: center;
             position: relative;
             left: 0.15rem;
+            color: white;
         }
     }
 

@@ -19,6 +19,7 @@ const MessageBar = ({ onSendMessage }) => {
 		a.href = url;
 		a.download = "recording.webm";
 		a.click();
+		handleStopRecording();
 	};
 	const handleSubmit = () => {
 		if (message.trim()) {
@@ -74,11 +75,13 @@ const MessageBar = ({ onSendMessage }) => {
 					onKeyDown={handleKeyDown} // Add key down handler
 				/>
 			)}
-			<button className={styles.sendButton} onClick={handleSubmit}>
-				<div className={styles.sendIconContainer}>
-					<SendIcon />
-				</div>
-			</button>
+			{!isRecording && (
+				<button className={styles.sendButton} onClick={handleSubmit}>
+					<div className={styles.sendIconContainer}>
+						<SendIcon />
+					</div>
+				</button>
+			)}
 		</div>
 	);
 };

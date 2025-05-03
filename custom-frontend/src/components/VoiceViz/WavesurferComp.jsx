@@ -45,13 +45,24 @@ export default function WavesurferComp({ handleStopRecording, onAudioSubmit }) {
 		return () => record.destroy();
 	}, [wavesurfer]);
 
-	const submit = async () => {
+	// Stops the recorder and hands the Blob to the parent
+	const submit = () => {
 		if (!rec) return;
-		if (rec.isRecording()) {
-			const blob = await rec.stopRecording();
-			// console.log("✅ Prompt would be sent with this blob:", blob);
-			onAudioSubmit(blob);
+
+		// Listen for the single “record-end” that carries the Blob
+		const handleRecordEnd = (blob) => {
+			onAudioSubmit(blob); // pass the Blob upward
+			rec.un("record-end", handleRecordEnd); // tidy up listener
+		};
+
+		// Use .once if available; fall back to .on + manual cleanup
+		if (typeof rec.once === "function") {
+			rec.once("record-end", onAudioSubmit);
+		} else {
+			rec.on("record-end", handleRecordEnd);
 		}
+
+		rec.stopRecording(); // triggers “record-end”
 	};
 
 	return (

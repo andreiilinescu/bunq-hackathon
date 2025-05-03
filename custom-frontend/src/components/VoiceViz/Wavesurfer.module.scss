@@ -11,7 +11,7 @@
 
     color: #fff;
     border-radius: 1rem;
-    width: 32.5rem;
+    width: 36.5rem;
     overflow: hidden !important;
 }
 
@@ -48,12 +48,12 @@
         color: var(--text_color);
         border: none;
         transition: all 0.2s ease-in-out;
-        background-color: var(--accent_color);
+        background-color: var(--background_color);
 
         &:hover {
             cursor: pointer;
 
-            // background-color: var(--accent_color);
+            background-color: var(--user_message_color);
             // color: var(--text_color);
         }
     }
