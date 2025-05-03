@@ -1,0 +1,110 @@
+.container {
+    // width: 100%;
+    border: 1px solid var(--text_color);
+    border-radius: 0.75rem;
+    $removePaddingLR: 0.3rem;
+    padding-left: calc(var(--userMessagePaddingLR) - $removePaddingLR);
+    padding-right: calc(var(--userMessagePaddingLR) - $removePaddingLR);
+    padding-top: calc(var(--userMessagePaddingTB) - 0.25rem);
+    padding-bottom: calc(var(--userMessagePaddingTB) - 0.25rem);
+
+    display: grid;
+    grid-template-columns: auto 80% auto; // First and third columns take auto width, middle takes 80%
+    align-items: center; // Vertically align items in the grid cells
+    gap: 1rem; // Add some space between columns
+
+    user-select: none;
+    margin-left: 1.5rem;
+    margin-right: 0.5rem;
+
+    p {
+        margin: 0.25rem;
+        // padding: 0.1rem;
+    }
+
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+        border: 1px solid var(--accent_color);
+        // cursor: pointer;
+    }
+
+    .voiceIconContainer {
+        transition: all 0.2s ease-in-out;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        // left: -0.5rem;
+
+        &:hover {
+            cursor: pointer;
+            transform: scale(1.1); // Scale up the icon on hover
+            transform-origin: center;
+
+            &::after {
+                content: "";
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 0;
+                height: 0;
+                border-radius: 50%;
+                box-shadow: 0 0 10px 5px var(--text_color);
+                pointer-events: none;
+                /* Ensures the pseudo-element doesn't interfere with clicks */
+                z-index: -1;
+                /* Places the glow behind the icon */
+            }
+        }
+    }
+
+    .sendButton {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: var(--accent_color);
+        border: none;
+        border-radius: 0.75rem;
+        $paddingLR: 0.25rem;
+        $paddingTB: 0.25rem;
+        padding-left: $paddingLR;
+        padding-left: $paddingLR;
+        padding-top: $paddingTB;
+        padding-bottom: $paddingTB;
+
+        transition: all 0.2s ease-in-out;
+        user-select: none;
+        position: relative;
+        // left: 0.25rem;
+
+        &:hover {
+            background-color: red;
+            cursor: pointer;
+        }
+
+        .sendIconContainer {
+            display: flex;
+            justify-self: center;
+            position: relative;
+            left: 0.15rem;
+        }
+    }
+
+    .inputField {
+        background-color: transparent;
+        border: none;
+        outline: none; // Removes the default browser outline on focus
+        color: var(--text_color);
+
+        &::placeholder {
+            color: var(--gray_text_color);
+        }
+
+        &:active,
+        &:focus {
+            border: none;
+            outline: none; // Ensure outline is also removed on active/focus
+        }
+    }
+}
