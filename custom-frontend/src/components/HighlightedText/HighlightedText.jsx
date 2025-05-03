@@ -1,23 +1,17 @@
 import React from "react";
 import styles from "./HighlightedText.module.scss";
+import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 
 const HighlightedText = ({ text, highlightWord }) => {
-	// Split text by 'bunq' (case-insensitive)
-	const regex = new RegExp(`(${highlightWord})`, "gi");
-	const parts = text.split(regex);
-
-	return (
-		<>
-			{parts.map((part, index) =>
-				part.toLowerCase() === highlightWord ? (
-					<span key={index} className={styles.highlight}>
-						{part}
-					</span>
-				) : (
-					<React.Fragment key={index}>{part}</React.Fragment>
-				)
-			)}
-		</>
-	);
+  // First convert markdown to HTML with highlighted words
+  if (highlightWord) {
+    const regex = new RegExp(`(${highlightWord})`, "gi");
+    text = text.replace(regex, `<span class="${styles.highlight}">$1</span>`);
+  }
+  
+  // Then render markdown with the HTML already inserted
+  return <ReactMarkdown rehypePlugins={[rehypeRaw]}>{text}</ReactMarkdown>;
 };
+
 export default HighlightedText;

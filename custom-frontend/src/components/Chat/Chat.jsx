@@ -5,7 +5,6 @@ import Message from "../Message/Message";
 import styles from "./Chat.module.scss";
 import { BACKEND_URL, BACKEND_URL_CHAT } from "../../constants";
 console.log(BACKEND_URL_CHAT);
-
 import CampaignIcon from "@mui/icons-material/Campaign";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 const Chat = () => {
@@ -125,6 +124,7 @@ const Chat = () => {
 		}
 		
 		// Return the text message
+		console.log("textMessage", textMessage);
 		return textMessage;
 		// console.log("Received response from API:", mess);
 		// Return the message directly

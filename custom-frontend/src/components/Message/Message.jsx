@@ -2,6 +2,7 @@ import React from "react";
 import styles from "./Message.module.scss";
 import AudioPlayer from "../AudioPlayer/AudioPlayer";
 import HighlightedText from "../HighlightedText/HighlightedText";
+
 const Message = ({ message, role, audio }) => {
 	// Determine alignment style based on role
 
