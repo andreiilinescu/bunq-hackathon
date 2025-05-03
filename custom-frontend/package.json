@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "custom-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,22 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^1.3.21",
-    "@assistant-ui/react": "^0.10.5",
-    "@assistant-ui/react-ai-sdk": "^0.10.6",
-    "@assistant-ui/react-markdown": "^0.10.3",
-    "@radix-ui/react-slot": "^1.2.0",
-    "@radix-ui/react-tooltip": "^1.2.4",
-    "@tailwindcss/vite": "^4.1.5",
-    "ai": "^4.3.13",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.507.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
+    "@mui/icons-material": "^7.0.2",
+    "@mui/material": "^7.0.2",
+    "@wavesurfer/react": "^1.0.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "remark-gfm": "^4.0.1",
-    "tailwind-merge": "^3.2.0",
-    "tailwindcss": "^4.1.5"
+    "wavesurfer.js": "^7.9.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
@@ -37,7 +31,6 @@
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
     "sass-embedded": "^1.87.0",
-    "tw-animate-css": "^1.2.9",
     "vite": "^6.3.1"
   }
 }
