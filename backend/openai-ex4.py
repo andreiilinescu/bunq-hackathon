@@ -21,6 +21,8 @@ from agents import (
 from openai import AsyncOpenAI
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from google.cloud.speech_v2 import SpeechClient
+from google.cloud.speech_v2.types import cloud_speech
 
 # ---------------------------------------------------------------------------
 # 0  Import Bunq tools & context model from your helper module
@@ -177,19 +179,104 @@ def reset():
 
 @app.post("/voice")
 def process_voice():
-    audio = request.files.get("audio")
+    print(request)  # This is the Flask request object
+    audio = request.files.get("audio")  # Use files.get instead of form.get
     if not audio:
         return jsonify({"error": "No audio file provided"}), 400
 
-    # Process the audio file (e.g., convert to text)
-    # For simplicity, we'll just return a placeholder response
-    text_response = "This is a placeholder for the transcribed text."
+    try:
+        # Save the audio file temporarily
+        temp_filename = f"temp_audio_{uuid.uuid4()}.webm"
+        audio.save(temp_filename)
 
-    # Append the transcribed text to the conversation
-    conversation.append({"role": "user", "content": text_response})
+        print(f"Saved audio file: {temp_filename}")
 
-    # Call the chat endpoint with the transcribed text
-    return chat()
+        speech_client = SpeechClient()
+
+        # Configure audio
+        with open(temp_filename, "rb") as audio_file:
+            content = audio_file.read()
+
+        speech_client = SpeechClient()
+
+        config = cloud_speech.RecognitionConfig(
+            auto_decoding_config=cloud_speech.AutoDetectDecodingConfig(),
+            language_codes=["en-US"],
+            model="latest_long",
+        )
+
+        # Use recognizer that already exists instead of creating a new one
+        recognizer_name = (
+            f"projects/gen-lang-client-0093539692/locations/global/recognizers/_"
+        )
+
+        with open(temp_filename, "rb") as audio_file:
+            content = audio_file.read()
+
+        speech_recognize_request = cloud_speech.RecognizeRequest(
+            recognizer=recognizer_name,
+            config=config,
+            content=content,  # Use content instead of uri
+        )
+
+        response = speech_client.recognize(request=speech_recognize_request)
+        transcribed_text = ""
+        for result in response.results:
+            transcribed_text += result.alternatives[0].transcript
+
+        print(f"Transcribed text: {transcribed_text}")
+
+        # Clean up temporary file
+        if os.path.exists(temp_filename):
+            os.remove(temp_filename)
+
+        # If transcription is empty, return an error
+        if not transcribed_text:
+            return jsonify({"error": "Could not transcribe audio"}), 400
+
+        # Process the transcribed text through the chat system
+        conversation.append({"role": "user", "content": transcribed_text})
+
+        # Process with the Finn agent
+        inner_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(inner_loop)
+        try:
+            result = inner_loop.run_until_complete(
+                Runner.run(
+                    finn_agent,
+                    input=conversation,
+                    context=context,
+                )
+            )
+        finally:
+            inner_loop.close()
+
+        # Build response payload - same as in chat endpoint
+        messages, events = [], []
+        for i in result.new_items:
+            if isinstance(i, MessageOutputItem):
+                messages.append({"text": ItemHelpers.text_message_output(i)})
+            elif isinstance(i, ToolCallItem):
+                events.append({"type": "tool_call", "tool": i.type})
+            elif isinstance(i, ToolCallOutputItem):
+                events.append({"type": "tool_result", "output": i.output})
+
+        conversation[:] = result.to_input_list()
+
+        # Return the same response format as the chat endpoint
+        return jsonify(
+            {
+                "messages": messages,
+                "events": events,
+                "transcription": transcribed_text,  # Include the transcription for debugging
+            }
+        )
+
+    except Exception as e:
+        import traceback
+
+        traceback.print_exc()
+        return jsonify({"error": f"Error processing voice: {str(e)}"}), 500
 
 
 # ---------------------------------------------------------------------------
