@@ -17,20 +17,20 @@ const Chat = () => {
 				"Sure, I can help with that. What seems to be the problem?",
 		},
 	];
+	const audioMessageSubmit = async (resonse) => {};
 	const [chatHistory, setChatHistory] = useState(defaultMessages);
 
 	const handleSendMessage = async (newMessageContent) => {
 		const newMessage = { role: "user", content: newMessageContent };
 		//* new user message comes in, add it to chat and make a message for the assistant
-		setChatHistory((prevHistory) => [...prevHistory, newMessage]);
+		addNewMessage(newMessage);
 		//* add a "thinking..." message for the assistant
-		setChatHistory((prevHistory) => [
-			...prevHistory,
-			{
-				role: "assistant",
-				content: "Thinking...",
-			},
-		]);
+		const thinkingMessage = {
+			role: "assistant",
+			content: "Thinking...",
+		};
+		addNewMessage(thinkingMessage);
+
 		const responseMessage = await sendMessageToAPI(newMessageContent);
 
 		// console.log("responseMessage", responseMessage);
@@ -39,9 +39,17 @@ const Chat = () => {
 			content: responseMessage,
 		};
 		//* remove the assistant's "thinking..." message and add the new one
+		changeLastMessage(newAssistantMessage);
+	};
+	const addNewMessage = (message) => {
+		// Add the new message to the chat history
+		setChatHistory((prevHistory) => [...prevHistory, message]);
+	};
+	const changeLastMessage = (message) => {
+		// Change the last message in the chat history
 		setChatHistory((prevHistory) => {
 			const updatedHistory = [...prevHistory];
-			updatedHistory[updatedHistory.length - 1] = newAssistantMessage;
+			updatedHistory[updatedHistory.length - 1] = message;
 			return updatedHistory;
 		});
 	};
@@ -71,7 +79,13 @@ const Chat = () => {
 					/>
 				))}
 			</div>
-			<MessageBar onSendMessage={handleSendMessage} />
+			<div className={styles.messageBarContainer}>
+				<MessageBar
+					onSendMessage={handleSendMessage}
+					addNewMessage={addNewMessage}
+					changeLastMessage={changeLastMessage}
+				/>
+			</div>
 		</div>
 	);
 };

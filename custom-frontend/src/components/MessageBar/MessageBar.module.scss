@@ -5,7 +5,7 @@
 }
 
 .container {
-    // width: 100%;
+    width: 50vw;
     border: 1px solid var(--text_color);
     border-radius: 0.75rem;
     $removePaddingLR: 0.3rem;
@@ -13,7 +13,7 @@
     padding-right: calc(var(--userMessagePaddingLR) - $removePaddingLR);
     padding-top: calc(var(--userMessagePaddingTB) - 0.25rem);
     padding-bottom: calc(var(--userMessagePaddingTB) - 0.25rem);
-
+    // width: 95%;
     display: grid;
     grid-template-columns: auto 80% auto; // First and third columns take auto width, middle takes 80%
     align-items: center; // Vertically align items in the grid cells
@@ -21,7 +21,7 @@
 
     user-select: none;
     margin-left: 1.5rem;
-    margin-right: 0.5rem;
+    margin-right: 1.5rem;
     position: relative;
 
     p {

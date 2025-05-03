@@ -7,14 +7,14 @@ import WaveSurferComp from "../VoiceViz/WavesurferComp";
 import { useState } from "react";
 
 const baseURL = import.meta.env.VITE_LOCALHOST_URL;
-const MessageBar = ({ onSendMessage }) => {
+const MessageBar = ({ onSendMessage, addNewMessage, changeLastMessage }) => {
 	const [message, setMessage] = useState("");
 	const [isRecording, setIsRecording] = useState(false); // State to track recording status
 	const handleInputChange = (event) => {
 		setMessage(event.target.value);
 	};
 	const handleAudioSubmit = async (blob) => {
-		dowloadRecording(blob);
+		// dowloadRecording(blob);
 		handleStopRecording();
 		const fullURL = `${baseURL}/voice`;
 		await sendRecordingToAPI(blob); // Send the recording to the API
@@ -27,12 +27,18 @@ const MessageBar = ({ onSendMessage }) => {
 		a.download = "recording.webm";
 		a.click();
 	};
-
+	const clearMessageBarText = () => {
+		setMessage(""); // Clear the message input field
+	};
 	/**
 	 * Send the recorded audio to your backend.
 	 * @param {Blob} blob - Audio captured by WaveSurfer’s Record plugin
 	 */
 	const sendRecordingToAPI = async (blob) => {
+		addNewMessage({
+			role: "user",
+			content: "Audio message",
+		});
 		const formData = new FormData();
 		formData.append("audio", blob, "recording.webm");
 		const response = await fetch(`${baseURL}/voice`, {
@@ -44,11 +50,18 @@ const MessageBar = ({ onSendMessage }) => {
 		} else {
 			console.log("Audio sent successfully!");
 		}
+		const data = await response.json();
+		const modelMessage = data.messages[0].text;
+		addNewMessage({
+			role: "assistant",
+			content: modelMessage,
+		});
 	};
 
 	const handleSubmit = () => {
 		if (message.trim()) {
 			onSendMessage(message); // Call the function passed from the parent component
+			clearMessageBarText(); // Clear the message input field after sending
 		}
 	};
 

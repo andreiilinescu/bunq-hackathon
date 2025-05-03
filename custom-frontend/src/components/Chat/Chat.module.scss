@@ -1,10 +1,49 @@
 .chatContainer {
     display: flex;
     flex-direction: column;
-    height: 100%;
     background-color: transparent;
+    justify-content: space-between;
+    // padding: 1rem;
+    align-items: center;
+    position: relative;
 
     .chatHistory {
+        box-sizing: content-box;
+        overflow-y: auto;
+        height: 90vh;
         position: relative;
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar_color) transparent;
+        scrollbar-gutter: stable;
+        width: 100%;
+
+        /* Webkit (Chrome, Safari, Edge) */
+        &::-webkit-scrollbar {
+            width: 8px;
+            /* Adjust width as needed */
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+            /* Transparent background */
+        }
+
+        &::-webkit-scrollbar-thumb {
+            // background-color: rgb(16, 55, 16);
+            /* Dark green thumb */
+            border-radius: 4px;
+            /* Optional: rounded corners */
+            border: 2px solid transparent;
+            /* Optional: creates padding around thumb */
+            background-clip: content-box;
+            /* Optional: makes border act like padding */
+        }
+    }
+
+    .messageBarContainer {
+        // margin-top: 1rem;
+        position: relative;
+        left: 0.5rem;
+        bottom: 1rem;
     }
 }

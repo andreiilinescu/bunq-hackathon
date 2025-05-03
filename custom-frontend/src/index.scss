@@ -1,11 +1,12 @@
 :root {
-    --background_color: #09090B;
+    --background_color: black;
     --accent_color: rgb(61, 125, 255);
     --text_color: white;
     --gray_text_color: #A1A1AA;
     --user_message_color: #27272A;
     --userMessagePaddingTB: 1em;
     --userMessagePaddingLR: 1.5em;
+    --scrollbar_color: gray;
     background-color: var(--background_color);
 }
 
