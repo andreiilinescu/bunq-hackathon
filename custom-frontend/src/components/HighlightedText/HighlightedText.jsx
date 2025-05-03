@@ -1,8 +1,7 @@
 import React from "react";
 import styles from "./HighlightedText.module.scss";
 
-const HighlightedText = ({ text }) => {
-	const highlightWord = "bunq";
+const HighlightedText = ({ text, highlightWord }) => {
 	// Split text by 'bunq' (case-insensitive)
 	const regex = new RegExp(`(${highlightWord})`, "gi");
 	const parts = text.split(regex);
