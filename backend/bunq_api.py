@@ -180,11 +180,9 @@ def bunqme_tab(
             bunqme_tab_entry=tab,
             monetary_account_id=monetary_account_id,
         )
-        print(tab_obj)
         url_obj = BunqMeTabApiObject.get(
             bunq_me_tab_id=tab_obj.value, monetary_account_id=monetary_account_id
         ).value
-        print(url_obj)
         return (
             f"✅ Tab created! {url_obj.bunqme_tab_share_url}\n"
             f"• Amount : {amount} {currency}\n"
