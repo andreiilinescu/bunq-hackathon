@@ -21,3 +21,4 @@ const HighlightedText = ({ text }) => {
 		</>
 	);
 };
+export default HighlightedText;
