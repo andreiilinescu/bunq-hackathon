@@ -4,20 +4,22 @@ import RecordPlugin from "wavesurfer.js/dist/plugins/record.esm.js";
 import styles from "./Wavesurfer.module.scss";
 import CloseIcon from "@mui/icons-material/Close";
 import DoneIcon from "@mui/icons-material/Done";
+
 export default function WavesurferComp({ handleStopRecording, onAudioSubmit }) {
 	const containerRef = useRef(null);
 	const [rec, setRec] = useState(null);
 
-	// Basic waveform renderer
+	// Basic waveform renderer (add responsive:true if supported)
 	const { wavesurfer } = useWavesurfer({
 		container: containerRef,
 		height: 30,
 		waveColor: "#0ea5e9",
 		progressColor: "#0284c7",
 		cursorWidth: 0,
+		// responsive: true,   <-- uncomment if your version of Wavesurfer supports this
 	});
 
-	// Set‑up Record plugin and auto‑start recording
+	// Set-up Record plugin and auto-start recording
 	useEffect(() => {
 		if (!wavesurfer) return;
 
@@ -30,12 +32,10 @@ export default function WavesurferComp({ handleStopRecording, onAudioSubmit }) {
 		);
 		setRec(record);
 
-		// Log the final blob when recording stops (checkButton)
 		record.on("record-end", (blob) => {
 			console.log("Recording finished:", blob);
 		});
 
-		// Auto‑start as soon as a mic is available
 		(async () => {
 			const [{ deviceId } = {}] =
 				await RecordPlugin.getAvailableAudioDevices();
@@ -45,31 +45,37 @@ export default function WavesurferComp({ handleStopRecording, onAudioSubmit }) {
 		return () => record.destroy();
 	}, [wavesurfer]);
 
+	// Redraw on window resize so Wavesurfer picks up the new width
+	useEffect(() => {
+		if (!wavesurfer) return;
+		const onResize = () => wavesurfer.drawBuffer();
+		window.addEventListener("resize", onResize);
+		return () => window.removeEventListener("resize", onResize);
+	}, [wavesurfer]);
+
 	// Stops the recorder and hands the Blob to the parent
 	const submit = () => {
 		if (!rec) return;
 
-		// Listen for the single “record-end” that carries the Blob
 		const handleRecordEnd = (blob) => {
-			onAudioSubmit(blob); // pass the Blob upward
-			rec.un("record-end", handleRecordEnd); // tidy up listener
+			onAudioSubmit(blob);
+			rec.un("record-end", handleRecordEnd);
 		};
 
-		// Use .once if available; fall back to .on + manual cleanup
 		if (typeof rec.once === "function") {
 			rec.once("record-end", onAudioSubmit);
 		} else {
 			rec.on("record-end", handleRecordEnd);
 		}
 
-		rec.stopRecording(); // triggers “record-end”
+		rec.stopRecording();
 	};
 
 	return (
 		<div className={styles.container}>
 			<div className={styles.btnContainer}>
 				<button
-					className={`${styles.sendButton}  ${styles.btn} `}
+					className={`${styles.sendButton}  ${styles.btn}`}
 					onClick={submit}
 					aria-label="Confirm"
 				>
@@ -84,6 +90,8 @@ export default function WavesurferComp({ handleStopRecording, onAudioSubmit }) {
 					<CloseIcon />
 				</button>
 			</div>
+
+			{/* This div will now always span 100% of .container’s width */}
 			<div ref={containerRef} className={styles.waveform} />
 		</div>
 	);

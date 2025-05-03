@@ -1,5 +1,5 @@
-import React from "react";
-import { useState } from "react";
+import React, { useEffect } from "react";
+import { useState, useRef } from "react";
 import MessageBar from "../MessageBar/MessageBar";
 import Message from "../Message/Message";
 import styles from "./Chat.module.scss";
@@ -8,6 +8,7 @@ console.log(baseURL);
 const chatURL = `${baseURL}/chat`;
 const Chat = () => {
 	// each message has role (user, assistant) and content (string)
+	const endOfMessagesRef = useRef(null);
 	const defaultMessages = [
 		{
 			role: "assistant",
@@ -54,7 +55,21 @@ const Chat = () => {
 	const addNewMessage = (message) => {
 		// Add the new message to the chat history
 		setChatHistory((prevHistory) => [...prevHistory, message]);
+
+		// Scroll to the bottom of the chat history
+		scrollToRef(endOfMessagesRef);
 	};
+	const scrollToRef = (ref) => {
+		if (ref.current) {
+			ref.current.scrollIntoView({
+				block: "end",
+				behavior: "smooth",
+			});
+		}
+	};
+	useEffect(() => {
+		scrollToRef(endOfMessagesRef);
+	}, [chatHistory]); // Scroll to the bottom when chatHistory changes
 	const changeLastMessage = (message) => {
 		// Change the last message in the chat history
 		setChatHistory((prevHistory) => {
@@ -62,6 +77,7 @@ const Chat = () => {
 			updatedHistory[updatedHistory.length - 1] = message;
 			return updatedHistory;
 		});
+		scrollToRef(endOfMessagesRef);
 	};
 	const sendMessageToAPI = async (message) => {
 		console.log("Sending message to API:", message);
@@ -89,6 +105,7 @@ const Chat = () => {
 						audio={message.audio}
 					/>
 				))}
+				<div ref={endOfMessagesRef} />
 			</div>
 			<div className={styles.messageBarContainer}>
 				<MessageBar
