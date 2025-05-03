@@ -4,10 +4,14 @@ import MessageBar from "../MessageBar/MessageBar";
 import Message from "../Message/Message";
 import styles from "./Chat.module.scss";
 const baseURL = import.meta.env.VITE_LOCALHOST_URL;
-console.log(baseURL);
+// console.log(baseURL);
+
+import CampaignIcon from "@mui/icons-material/Campaign";
+import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 const chatURL = `${baseURL}/chat`;
 const Chat = () => {
 	// each message has role (user, assistant) and content (string)
+	const [reciteMessages, setReciteMessages] = useState(false);
 	const endOfMessagesRef = useRef(null);
 	const defaultMessages = [
 		{
@@ -77,6 +81,25 @@ const Chat = () => {
 			return updatedHistory;
 		});
 	};
+	const reciteAudioFile = async (audioFile) => {
+		if (audioFile) {
+			try {
+				// If it's a URL:
+				const audio = new Audio(audioFile);
+				// If it's base64 you may need: new Audio(data:audio/mp3;base64,${modelReciteAudioFile});
+				await audio.play();
+			} catch (err) {
+				console.error("Audio playback failed:", err);
+			}
+		} else {
+			// load an audio file from assets
+			console.log("playing audio");
+			const audio = new Audio("../assets/recording.webm");
+			audio.play().catch((error) => {
+				console.error("Error playing audio:", error);
+			});
+		}
+	};
 	const sendMessageToAPI = async (message) => {
 		console.log("Sending message to API:", message);
 		const response = await fetch(chatURL, {
@@ -84,9 +107,14 @@ const Chat = () => {
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: JSON.stringify({ message: message }),
+			body: JSON.stringify({
+				message: message,
+				requestAudio: reciteMessages,
+			}),
 		});
 		const data = await response.json();
+		const modelReciteAudioFile = data.messages[0].audio;
+		await reciteAudioFile(modelReciteAudioFile);
 		const mess = data.messages[0].text;
 		// console.log("Received response from API:", mess);
 		// Return the message directly
@@ -94,6 +122,12 @@ const Chat = () => {
 	};
 	return (
 		<div className={styles.chatContainer}>
+			<button
+				className={styles.reciteButton}
+				onClick={() => setReciteMessages(!reciteMessages)}
+			>
+				{reciteMessages ? <CampaignIcon /> : <VolumeOffIcon />}
+			</button>
 			<div className={styles.chatHistory}>
 				{chatHistory.map((message, index) => (
 					<Message
@@ -107,6 +141,8 @@ const Chat = () => {
 			</div>
 			<div className={styles.messageBarContainer}>
 				<MessageBar
+					reciteMessages={reciteMessages}
+					functionToPlayAudioAloud={reciteAudioFile}
 					onSendMessage={handleSendMessage}
 					addNewMessage={addNewMessage}
 					changeLastMessage={changeLastMessage}

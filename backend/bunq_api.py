@@ -32,12 +32,19 @@ _api_context.save()  # cache token & device cert
 BunqContext.load_api_context(_api_context)
 
 _user_context = BunqContext.user_context()
+accounts = MonetaryAccountBankApiObject.list().value
+print(accounts)
 # ------------------------------------------------------------------------------
 # 1.  Shared conversation context model
 # ------------------------------------------------------------------------------
 
 
 class BunqAgentContext(BaseModel):
+    accounts: list[dict[str, Any]] = accounts  # [{'id': id, 'description': desc}, ...]
+    user_id: str | None = _user_context.user_id  # current user id
+    user_name: str | None = _user_context.user_person.display_name  # current user name
+    user_nationality: str | None = _user_context.user_person.nationality  # current
+    preffered_currency: str | None = "EUR"  # default currency
     current_account_id: str | None = None  # chosen account for this turn
     pending_payment: dict[str, Any] | None = None  # {'from': id, 'to': id, ...}
     last_fx_pair: tuple[str, str] | None = None  # (base, target)
@@ -69,10 +76,36 @@ def _account_balance(account_id: str) -> str:
 @function_tool(
     description_override="Return a newline‑separated list of the user's active bunq monetary accounts in the format 'id: description'. No arguments."
 )
-def list_bunq_accounts() -> str:
+def list_bunq_accounts(context: RunContextWrapper[BunqAgentContext]) -> str:
     accounts = _monetary_accounts()
-    lines = [f"{acc.id_}: {acc.description}" for acc in accounts]
+    accounts = [
+        {"account_id": acc.id_, "description": acc.description, "aliases": acc.alias}
+        for acc in accounts
+    ]
+    for acc in accounts:
+        for i, alias in enumerate(acc["aliases"]):
+            acc["aliases"][i] = {
+                "type": alias.type_,
+                "value": alias.value,
+            }
+    context.context.accounts = accounts  # update context
+    lines = []
+    for acc in accounts:
+        line = f"{acc['account_id']}: {acc['description']}"
+        for alias in acc["aliases"]:
+            line += f"  • {alias['type']}: {alias['value']}"
+        lines.append(line)
     return "\n".join(lines) if lines else "No accounts found."
+
+
+@function_tool
+def get_bunq_account(account_name: str) -> str:
+    """Get the id of a bunq account. Args: String account name (str). Returns 'Account id'."""
+    accounts = _monetary_accounts()
+    for acc in accounts:
+        if acc.description == account_name:
+            return f"Account id: {acc.id_}"
+    return "Account not found."
 
 
 @function_tool
@@ -99,14 +132,13 @@ def create_payment(
     to_alias: str,
     amount: float,
     currency: str = "EUR",
-    *,
     alias_type: str | None = None,  # 'IBAN' | 'EMAIL' | 'PHONE_NUMBER'
     description: str | None = None,
-    merchant_reference: str | None = None,
-    allow_bunqto: bool | None = None,
-    attachment_ids: list[int] | None = None,
 ) -> str:
     """
+    If a transfer to a bunqto alias fails, the user is prompted to choose a different alias type.
+    If the  user wants to send money between his own accounts, he doesn't have to provide ids, you can use the account name and get the id from context.
+    Args:
     Send money from *from_account* to *to_alias* (IBAN, email or phone).
 
     • Automatically infers alias type when not given.
@@ -116,6 +148,7 @@ def create_payment(
     # ------------------------------------------------------------------
     # 1️⃣  Determine the pointer type
     # ------------------------------------------------------------------
+
     def _guess_pointer_type(val: str) -> str:
         if re.match(r"^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$", val.replace(" ", "")):
             return "IBAN"
@@ -139,24 +172,22 @@ def create_payment(
             amount=amount_obj,
             counterparty_alias=counterparty,
             description=description or "",
-            attachment=attachment_ids or None,
-            merchant_reference=merchant_reference,
-            allow_bunqto=allow_bunqto,
             monetary_account_id=from_account,
-        ).value
+        )
 
         context.context.pending_payment = None  # clear draft
         return (
-            f"✅ Payment {payment.id_} executed!\n"
-            f"• Amount : {payment.amount.value} {payment.amount.currency}\n"
+            f"✅ Payment {payment.value} executed!\n"
+            f"• Amount : {amount} {currency}\n"
             f"• From   : {from_account}\n"
             f"• To     : {to_alias} ({p_type})\n"
-            f"• Desc.  : {payment.description or '—'}"
+            f"• Desc.  : {description or '—'}"
             "\n\nThis is not financial advice."
         )
 
     except Exception as e:
         err_msg = "; ".join(err.error_description for err in e.error)
+        print(err_msg)
         return f"❌ Payment failed: {err_msg}"
 
 
@@ -209,12 +240,27 @@ def get_exchange_rate(base_currency: str, target_currency: str) -> str:
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
-        
-        if target_currency in data['rates']:
-            rate = data['rates'][target_currency]
+
+        if target_currency in data["rates"]:
+            rate = data["rates"][target_currency]
             return f"1 {base_currency} = {rate:.4f} {target_currency}"
         else:
             return f"❌ Currency {target_currency} not found in exchange rates"
-            
+
     except Exception as e:
         return f"❌ Failed to fetch exchange rate: {str(e)}"
+
+
+@function_tool
+def get_user_info() -> str:
+    """
+    Get the current user's information(name,user_id,nationality,preffered_currency).
+    Returns: Formatted string with user information
+    """
+    user = _user_context.user_person
+    return (
+        f"User ID: {user.id_}\n"
+        f"Name: {user.display_name}\n"
+        f"Nationality : {user.nationality}\n"
+        f"Preferred Currency: Euro\n"
+    )

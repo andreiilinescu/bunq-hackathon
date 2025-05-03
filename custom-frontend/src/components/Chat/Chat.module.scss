@@ -10,7 +10,7 @@
     .chatHistory {
         box-sizing: content-box;
         overflow-y: auto;
-        height: 90vh;
+        height: 85vh;
         position: relative;
         scrollbar-width: thin;
         scrollbar-color: var(--scrollbar_color) transparent;
@@ -45,5 +45,21 @@
         position: relative;
         left: 0.5rem;
         bottom: 1rem;
+    }
+}
+
+.reciteButton {
+    outline: none;
+    border: none;
+    background-color: transparent;
+    color: var(--text_color);
+
+    transition: all 0.2s ease-in-out;
+    margin-top: 1rem;
+
+    &:hover {
+        cursor: pointer;
+        transform: scale(1.1); // Scale up the icon on hover
+        transform-origin: center;
     }
 }

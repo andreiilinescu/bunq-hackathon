@@ -7,7 +7,13 @@ import WaveSurferComp from "../VoiceViz/WavesurferComp";
 import { useState, useRef, useEffect } from "react";
 
 const baseURL = import.meta.env.VITE_LOCALHOST_URL;
-const MessageBar = ({ onSendMessage, addNewMessage, changeLastMessage }) => {
+const MessageBar = ({
+	reciteMessages,
+	functionToPlayAudioAloud,
+	onSendMessage,
+	addNewMessage,
+	changeLastMessage,
+}) => {
 	const [message, setMessage] = useState("");
 	const [isRecording, setIsRecording] = useState(false); // State to track recording status
 	const [containerWidthRem, setContainerWidthRem] = useState(0);
@@ -64,6 +70,7 @@ const MessageBar = ({ onSendMessage, addNewMessage, changeLastMessage }) => {
 		// console.log()
 		const formData = new FormData();
 		formData.append("audio", blob, "recording.webm");
+		formData.append("requestAudio", reciteMessages);
 		const response = await fetch(`${baseURL}/voice`, {
 			method: "POST",
 			body: formData,
@@ -75,6 +82,9 @@ const MessageBar = ({ onSendMessage, addNewMessage, changeLastMessage }) => {
 		}
 		const data = await response.json();
 		const modelMessage = data.messages[0].text;
+		const modelReciteAudioFile = data.messages[0].audio;
+		functionToPlayAudioAloud(modelReciteAudioFile); // Play the audio aloud
+		//! take the recite file and do something with it
 		changeLastMessage({
 			role: "assistant",
 			content: modelMessage,
