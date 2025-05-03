@@ -17,6 +17,7 @@ import os
 from agents import function_tool, RunContextWrapper
 import re
 from dotenv import load_dotenv
+import requests
 
 load_dotenv()
 
@@ -66,7 +67,7 @@ def _account_balance(account_id: str) -> str:
 
 
 @function_tool(
-    description_override="Return a newline‑separated list of the user’s active bunq monetary accounts in the format ‘<id>: <description>’. No arguments."
+    description_override="Return a newline‑separated list of the user's active bunq monetary accounts in the format 'id: description'. No arguments."
 )
 def list_bunq_accounts() -> str:
     accounts = _monetary_accounts()
@@ -76,18 +77,18 @@ def list_bunq_accounts() -> str:
 
 @function_tool
 def get_bunq_balance(account_id: str) -> str:
-    """Look up the real‑time balance of a bunq account. Args: account_id (str). Returns ‘Balance for <id>: €<value>’."""
+    """Look up the real-time balance of a bunq account. Args: account_id (str). Returns 'Balance for id: €value'."""
     balance = _account_balance(account_id)
     return f"Balance for {account_id}: €{balance}"
 
 
 @function_tool
 def get_transaction_history(account_id: str, limit: int = 10) -> str:
-    """Fetch recent transcations for an account. Args: account_id (str), limit (int, default 10). Returns up to <limit> lines formatted ‘YYYY‑MM‑DD: ±€amount – description’ sorted newest→oldest."""
+    """Fetch recent transcations for an account. Args: account_id (str), limit (int, default 10). Returns up to <limit> lines formatted 'YYYY-MM-DD: ±€amount – description' sorted newest→oldest."""
     pagination = Pagination()
     pagination.count = limit
     txs = PaymentApiObject.list(account_id, pagination.url_params_count_only).value
-    out = [f"{tx.created}: {tx.amount.value} – {tx.description}" for tx in txs[:limit]]
+    out = [f"{tx.created}: {tx.amount.value} – {tx.description}" for tx in txs[:limit]]
     return "\n".join(out) or "No transactions."
 
 
@@ -168,7 +169,7 @@ def bunqme_tab(
     description: str | None = None,
 ) -> str:
     """
-    Create a public bunq.me payment request link. Args: amount (float), currency (str, default ‘EUR’), optional monetary_account_id, description. Returns the tab URL and summary.
+    Create a public bunq.me payment request link. Args: amount (float), currency (str, default 'EUR'), optional monetary_account_id, description. Returns the tab URL and summary.
     """
     try:
         amount_inquired = AmountObject(str(amount), currency)
@@ -197,6 +198,23 @@ def bunqme_tab(
 
 @function_tool
 def get_exchange_rate(base_currency: str, target_currency: str) -> str:
-    # Placeholder → plug your preferred FX API here
-    dummy_rate = 1.08 if (base_currency, target_currency) == ("EUR", "USD") else 0.92
-    return f"1 {base_currency} = {dummy_rate} {target_currency}"
+    """
+    Get the current exchange rate between two currencies using a free exchange rate API.
+    Args: base_currency (str), target_currency (str)
+    Returns: Formatted string with the exchange rate
+    """
+    try:
+        # Use a free exchange rate API
+        url = f"https://api.exchangerate-api.com/v4/latest/{base_currency}"
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        
+        if target_currency in data['rates']:
+            rate = data['rates'][target_currency]
+            return f"1 {base_currency} = {rate:.4f} {target_currency}"
+        else:
+            return f"❌ Currency {target_currency} not found in exchange rates"
+            
+    except Exception as e:
+        return f"❌ Failed to fetch exchange rate: {str(e)}"
