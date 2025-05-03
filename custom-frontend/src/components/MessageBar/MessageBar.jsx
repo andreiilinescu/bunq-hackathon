@@ -6,21 +6,46 @@ import SendIcon from "@mui/icons-material/Send";
 import WaveSurferComp from "../VoiceViz/WavesurferComp";
 import { useState } from "react";
 
+const baseURL = import.meta.env.VITE_LOCALHOST_URL;
 const MessageBar = ({ onSendMessage }) => {
 	const [message, setMessage] = useState("");
 	const [isRecording, setIsRecording] = useState(false); // State to track recording status
 	const handleInputChange = (event) => {
 		setMessage(event.target.value);
 	};
-	const sendRecording = (blob) => {
+	const handleAudioSubmit = async (blob) => {
+		dowloadRecording(blob);
+		handleStopRecording();
+		const fullURL = `${baseURL}/voice`;
+		await sendRecordingToAPI(blob); // Send the recording to the API
+	};
+	const dowloadRecording = (blob) => {
 		// Handle sending the recorded audio blob here
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement("a");
 		a.href = url;
 		a.download = "recording.webm";
 		a.click();
-		handleStopRecording();
 	};
+
+	/**
+	 * Send the recorded audio to your backend.
+	 * @param {Blob} blob - Audio captured by WaveSurfer’s Record plugin
+	 */
+	const sendRecordingToAPI = async (blob) => {
+		const formData = new FormData();
+		formData.append("audio", blob, "recording.webm");
+		const response = await fetch(`${baseURL}/voice`, {
+			method: "POST",
+			body: formData,
+		});
+		if (!response.ok) {
+			console.error("Error sending audio to API:", response.statusText);
+		} else {
+			console.log("Audio sent successfully!");
+		}
+	};
+
 	const handleSubmit = () => {
 		if (message.trim()) {
 			onSendMessage(message); // Call the function passed from the parent component
@@ -52,7 +77,7 @@ const MessageBar = ({ onSendMessage }) => {
 					<div className={styles.waveformContainer}>
 						<WaveSurferComp
 							handleStopRecording={handleStopRecording}
-							onAudioSubmit={sendRecording}
+							onAudioSubmit={handleAudioSubmit}
 						/>
 					</div>
 				)}

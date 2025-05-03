@@ -46,6 +46,7 @@ CORS(app)
 # ---------------------------------------------------------------------------
 BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 API_KEY = os.getenv("GEMINI_API_KEY")
+print(f"API key: {API_KEY}")
 MODEL_NAME = "gemini-2.0-flash"
 
 client = AsyncOpenAI(base_url=BASE_URL, api_key=API_KEY)
@@ -133,6 +134,7 @@ async def cli_main():
 @app.post("/chat")
 def chat():
     user_msg = request.json.get("message", "").strip()
+    print(f"User: {user_msg}")
     if not user_msg:
         return jsonify({"error": "Empty message"}), 400
 
@@ -162,7 +164,7 @@ def chat():
             events.append({"type": "tool_result", "output": i.output})
 
     conversation[:] = result.to_input_list()
-
+    print(f"Finn: {messages[-1]['text']}")
     return jsonify({"messages": messages, "events": events})
 
 
