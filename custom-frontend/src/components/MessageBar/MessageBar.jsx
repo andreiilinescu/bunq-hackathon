@@ -4,19 +4,35 @@ import MicNoneIcon from "@mui/icons-material/MicNone";
 import SettingsVoiceIcon from "@mui/icons-material/SettingsVoice";
 import SendIcon from "@mui/icons-material/Send";
 import WaveSurferComp from "../VoiceViz/WavesurferComp";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const baseURL = import.meta.env.VITE_LOCALHOST_URL;
 const MessageBar = ({ onSendMessage, addNewMessage, changeLastMessage }) => {
 	const [message, setMessage] = useState("");
 	const [isRecording, setIsRecording] = useState(false); // State to track recording status
+	const [containerWidthRem, setContainerWidthRem] = useState(0);
+	const containerRef = useRef(null);
+	useEffect(() => {
+		const updateWidth = () => {
+			if (!containerRef.current) return;
+			const px = containerRef.current.clientWidth;
+			const rootFontSize = parseFloat(
+				getComputedStyle(document.documentElement).fontSize
+			);
+			setContainerWidthRem(px / rootFontSize);
+		};
+
+		updateWidth();
+		window.addEventListener("resize", updateWidth);
+		return () => window.removeEventListener("resize", updateWidth);
+	}, []);
+
 	const handleInputChange = (event) => {
 		setMessage(event.target.value);
 	};
 	const handleAudioSubmit = async (blob) => {
 		// dowloadRecording(blob);
 		handleStopRecording();
-		const fullURL = `${baseURL}/voice`;
 		await sendRecordingToAPI(blob); // Send the recording to the API
 	};
 	const dowloadRecording = (blob) => {
@@ -89,6 +105,7 @@ const MessageBar = ({ onSendMessage, addNewMessage, changeLastMessage }) => {
 
 	return (
 		<div
+			ref={containerRef}
 			className={`${styles.container} ${
 				isRecording ? styles.recording : ""
 			}`}
@@ -97,6 +114,7 @@ const MessageBar = ({ onSendMessage, addNewMessage, changeLastMessage }) => {
 				{isRecording && (
 					<div className={styles.waveformContainer}>
 						<WaveSurferComp
+							widthRem={containerWidthRem}
 							handleStopRecording={handleStopRecording}
 							onAudioSubmit={handleAudioSubmit}
 						/>

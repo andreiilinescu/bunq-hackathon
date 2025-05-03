@@ -5,7 +5,11 @@ import styles from "./Wavesurfer.module.scss";
 import CloseIcon from "@mui/icons-material/Close";
 import DoneIcon from "@mui/icons-material/Done";
 
-export default function WavesurferComp({ handleStopRecording, onAudioSubmit }) {
+export default function WavesurferComp({
+	widthRem,
+	handleStopRecording,
+	onAudioSubmit,
+}) {
 	const containerRef = useRef(null);
 	const [rec, setRec] = useState(null);
 
@@ -73,9 +77,11 @@ export default function WavesurferComp({ handleStopRecording, onAudioSubmit }) {
 
 		rec.stopRecording();
 	};
-
+	const waveformStyle = {
+		"--target_width": `${widthRem - 3}rem`,
+	};
 	return (
-		<div className={styles.container}>
+		<div className={styles.container} style={waveformStyle}>
 			<div className={styles.btnContainer}>
 				<button
 					className={`${styles.sendButton}  ${styles.btn}`}
