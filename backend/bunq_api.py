@@ -86,23 +86,71 @@ def get_transaction_history(account_id: str, limit: int = 10) -> str:
 def create_payment(
     context: RunContextWrapper[BunqAgentContext],
     from_account: str,
-    to_iban: str,
+    to_alias: str,
     amount: float,
     currency: str = "EUR",
+    *,
+    alias_type: str | None = None,  # 'IBAN' | 'EMAIL' | 'PHONE_NUMBER'
+    description: str | None = None,
+    merchant_reference: str | None = None,
+    allow_bunqto: bool | None = None,
+    attachment_ids: list[int] | None = None,
 ) -> str:
     """
-    Actually creates the payment **after** the Payment Agent already
-    validated intent with the user.
+    Send money from *from_account* to *to_alias* (IBAN, email or phone).
+
+    • Automatically infers alias type when not given.
+    • Surfaces Bunq API errors to the user instead of crashing.
     """
     from bunq.sdk.model.generated.endpoint import PaymentApiObject
     from bunq.sdk.model.generated.object_ import AmountObject, PointerObject
+    import re
 
-    amt = AmountObject(str(amount), currency)
-    counterparty = PointerObject("IBAN", to_iban, "Counterparty")
-    PaymentApiObject.create(amt, from_account, counterparty)
-    # Clear pending state so we don’t repeat accidental transfers
-    context.context.pending_payment = None
-    return f"✅ Sent {amount} {currency} from {from_account} to {to_iban}."
+    # ------------------------------------------------------------------
+    # 1️⃣  Determine the pointer type
+    # ------------------------------------------------------------------
+    def _guess_pointer_type(val: str) -> str:
+        if re.match(r"^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$", val.replace(" ", "")):
+            return "IBAN"
+        if "@" in val:
+            return "EMAIL"
+        return "PHONE_NUMBER"
+
+    p_type = (alias_type or _guess_pointer_type(to_alias)).upper()
+
+    # ------------------------------------------------------------------
+    # 2️⃣  Build SDK objects
+    # ------------------------------------------------------------------
+    amount_obj = AmountObject(str(amount), currency)
+    counterparty = PointerObject(p_type, to_alias, "Counterparty")
+
+    # ------------------------------------------------------------------
+    # 3️⃣  Call Bunq
+    # ------------------------------------------------------------------
+    try:
+        payment = PaymentApiObject.create(
+            amount=amount_obj,
+            counterparty_alias=counterparty,
+            description=description or "",
+            attachment=attachment_ids or None,
+            merchant_reference=merchant_reference,
+            allow_bunqto=allow_bunqto,
+            monetary_account_id=from_account,
+        ).value
+
+        context.context.pending_payment = None  # clear draft
+        return (
+            f"✅ Payment {payment.id_} executed!\n"
+            f"• Amount : {payment.amount.value} {payment.amount.currency}\n"
+            f"• From   : {from_account}\n"
+            f"• To     : {to_alias} ({p_type})\n"
+            f"• Desc.  : {payment.description or '—'}"
+            "\n\nThis is not financial advice."
+        )
+
+    except Exception as e:
+        err_msg = "; ".join(err.error_description for err in e.error)
+        return f"❌ Payment failed: {err_msg}"
 
 
 @function_tool

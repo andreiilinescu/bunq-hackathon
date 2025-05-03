@@ -27,6 +27,11 @@ from bunq_api import (
     create_payment,
     get_exchange_rate,
 )
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)
 
 BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 
@@ -171,5 +176,100 @@ async def main():
             current_agent = result.last_agent
 
 
+current_agent = triage_agent
+input_items = []
+context = BunqAgentContext()
+
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    global current_agent, input_items, context
+
+    user_input = request.json.get(
+        "message"
+    )  # Changed from "input" to "message" for consistency
+    if not user_input:
+        return jsonify({"error": "No message provided"}), 400
+
+    # Create a new event loop for this request
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    try:
+        # Add user input to the conversation
+        input_items.append({"role": "user", "content": user_input})
+
+        # Run the async code in the synchronous route
+        result = loop.run_until_complete(
+            Runner.run(
+                current_agent,
+                input_items,
+                context=context,
+            )
+        )
+
+        # Process response to capture messages and events
+        response_messages = []
+        events = []
+
+        for item in result.new_items:
+            src = item.agent.name
+
+            if isinstance(item, MessageOutputItem):
+                message_text = ItemHelpers.text_message_output(item)
+                response_messages.append({"text": message_text, "agent": src})
+
+            elif isinstance(item, HandoffOutputItem):
+                events.append(
+                    {"type": "handoff", "from": src, "to": item.target_agent.name}
+                )
+
+            elif isinstance(item, ToolCallItem):
+                events.append(
+                    {"type": "tool_call", "agent": src, "tool": item.tool_name}
+                )
+
+            elif isinstance(item, ToolCallOutputItem):
+                events.append(
+                    {"type": "tool_result", "agent": src, "output": item.output}
+                )
+
+        # Update the global state
+        input_items = result.to_input_list()
+        current_agent = result.last_agent
+
+        return jsonify(
+            {
+                "messages": response_messages,
+                "events": events,
+                "current_agent": current_agent.name,
+            }
+        )
+
+    except Exception as e:
+        import traceback
+
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        loop.close()
+
+
+@app.route("/reset", methods=["POST"])
+def reset_conversation():
+    global current_agent, input_items
+
+    # Reset to initial state
+    current_agent = triage_agent
+    input_items = []
+
+    return jsonify({"status": "success", "message": "Conversation reset"})
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    if os.getenv("SERVER_MODE", "true").lower() in ("true", "1", "yes"):
+        print("Starting Flask server on port 5005...")
+        app.run(host="0.0.0.0", port=5005, debug=True)
+    else:
+        print("Running in console mode...")
+        asyncio.run(main())
