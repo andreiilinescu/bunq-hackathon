@@ -173,11 +173,28 @@ def reset():
     return jsonify({"ok": True})
 
 
+@app.post("/voice")
+def process_voice():
+    audio = request.files.get("audio")
+    if not audio:
+        return jsonify({"error": "No audio file provided"}), 400
+
+    # Process the audio file (e.g., convert to text)
+    # For simplicity, we'll just return a placeholder response
+    text_response = "This is a placeholder for the transcribed text."
+
+    # Append the transcribed text to the conversation
+    conversation.append({"role": "user", "content": text_response})
+
+    # Call the chat endpoint with the transcribed text
+    return chat()
+
+
 # ---------------------------------------------------------------------------
 # 7  Entry point
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    if os.getenv("SERVER_MODE", "1") in {"1", "true", "yes"}:
+    if os.getenv("SERVER_MODE", "0") in {"1", "true", "yes"}:
         print("Serving on :5005 …")
         app.run(host="0.0.0.0", port=5005, debug=True)
     else:
