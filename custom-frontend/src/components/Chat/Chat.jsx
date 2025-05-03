@@ -26,7 +26,11 @@ const Chat = () => {
 	const [chatHistory, setChatHistory] = useState(defaultMessages);
 
 	const handleSendMessage = async (newMessageContent) => {
-		const newMessage = { role: "user", content: newMessageContent };
+		const newMessage = {
+			role: "user",
+			content: newMessageContent,
+			audio: "none",
+		};
 		//* new user message comes in, add it to chat and make a message for the assistant
 		addNewMessage(newMessage);
 		//* add a "thinking..." message for the assistant
