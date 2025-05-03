@@ -30,6 +30,7 @@
     }
 
     transition: all 0.2s ease-in-out;
+    background-color: var(--background_color);
 
     &:hover {
         border: 1px solid var(--accent_color);
