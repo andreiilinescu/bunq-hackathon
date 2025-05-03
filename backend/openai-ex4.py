@@ -159,7 +159,7 @@ def chat():
         if isinstance(i, MessageOutputItem):
             messages.append({"text": ItemHelpers.text_message_output(i)})
         elif isinstance(i, ToolCallItem):
-            events.append({"type": "tool_call", "tool": i.tool_name})
+            events.append({"type": "tool_call", "tool": i.type})
         elif isinstance(i, ToolCallOutputItem):
             events.append({"type": "tool_result", "output": i.output})
 

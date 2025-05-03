@@ -23,14 +23,27 @@ const Chat = () => {
 		const newMessage = { role: "user", content: newMessageContent };
 		//* new user message comes in, add it to chat and make a message for the assistant
 		setChatHistory((prevHistory) => [...prevHistory, newMessage]);
-
+		//* add a "thinking..." message for the assistant
+		setChatHistory((prevHistory) => [
+			...prevHistory,
+			{
+				role: "assistant",
+				content: "Thinking...",
+			},
+		]);
 		const responseMessage = await sendMessageToAPI(newMessageContent);
-		console.log("responseMessage", responseMessage);
+
+		// console.log("responseMessage", responseMessage);
 		const newAssistantMessage = {
 			role: "assistant",
 			content: responseMessage,
 		};
-		setChatHistory((prevHistory) => [...prevHistory, newAssistantMessage]);
+		//* remove the assistant's "thinking..." message and add the new one
+		setChatHistory((prevHistory) => {
+			const updatedHistory = [...prevHistory];
+			updatedHistory[updatedHistory.length - 1] = newAssistantMessage;
+			return updatedHistory;
+		});
 	};
 	const sendMessageToAPI = async (message) => {
 		console.log("Sending message to API:", message);
