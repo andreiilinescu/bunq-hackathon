@@ -13,7 +13,6 @@ Gideon is a voice-enabled banking assistant that makes managing money as easy as
 - Real-time currency exchange
 - Dual AI: ChatGPT-4o & Gemini (with voice support)
 
----
 ## 🧪 Tech Stack
 
 - AI: ChatGPT-4o/Gemini
