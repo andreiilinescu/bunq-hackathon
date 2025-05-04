@@ -22,16 +22,7 @@ from agents import (
 from openai import AsyncOpenAI
 from flask import Flask, request, jsonify, make_response, send_file
 from flask_cors import CORS
-from google.cloud.speech_v2 import SpeechClient
-from google.cloud.speech_v2.types import cloud_speech
-from google.cloud.texttospeech_v1 import TextToSpeechClient
-from google.cloud.texttospeech_v1.types import (
-    SynthesisInput,
-    VoiceSelectionParams,
-    SsmlVoiceGender,
-    AudioConfig,
-    AudioEncoding,
-)
+
 
 # ---------------------------------------------------------------------------
 # 0  Import Bunq tools & context model from your helper module
@@ -56,12 +47,7 @@ CORS(app)
 # ---------------------------------------------------------------------------
 # 2  OpenAI / Gemini client
 # ---------------------------------------------------------------------------
-BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
-API_KEY = os.getenv("GEMINI_API_KEY")
-MODEL_NAME = "gemini-2.0-flash"
 
-client = AsyncOpenAI(base_url=BASE_URL, api_key=API_KEY)
-set_tracing_disabled(disabled=True)
 
 # ---------------------------------------------------------------------------
 # 3  The **single** Finn agent
@@ -296,13 +282,6 @@ def process_voice():
         audio.save(temp_filename)
 
         print(f"Saved audio file: {temp_filename}")
-
-        speech_client = SpeechClient()
-
-        # Configure audio
-        with open(temp_filename, "rb") as audio_file:
-            time.sleep(3)
-            content = audio_file.read()
 
         speech_client = SpeechClient()
 

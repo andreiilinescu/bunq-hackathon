@@ -1,16 +1,17 @@
-import React from "react";
-import { ChatProvider } from "./custom_components/ChatProvider/ChatProvider";
-import Sidebar from "./custom_components/Sidebar/Sidebar";
-import ChatWindow from "./custom_components/ChatWindow/ChatWindow";
-import "./index.scss";
+import { useState } from "react";
 
-export default function App() {
+import styles from "./App.module.scss";
+import Chat from "./components/Chat/Chat";
+function App() {
+	const [count, setCount] = useState(0);
+
 	return (
-		<ChatProvider>
-			<div className="app-grid">
-				<Sidebar />
-				<ChatWindow />
+		<div className={styles.mainContainer}>
+			<div className={styles.mainCol}>
+				<Chat />
 			</div>
-		</ChatProvider>
+		</div>
 	);
 }
+
+export default App;
