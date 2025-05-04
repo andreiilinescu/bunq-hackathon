@@ -1,4 +1,4 @@
-# 🧠 Gideon – Voice-First Banking Assistant
+# Gideon – Voice-First Banking Assistant
 
 **Say it. Boom. It’s done. Thanks, Gideon.**
 
@@ -16,13 +16,13 @@ Gideon is a voice-enabled banking assistant that makes managing money as easy as
 ---
 ## 🧪 Tech Stack
 
-- 🧠 AI: ChatGPT-4o/Gemini
+- AI: ChatGPT-4o/Gemini
 
-- 🧾 Backend: Flask, Python,OpenAi Agents SDK ,simulated bank APIs
+- Backend: Flask, Python,OpenAi Agents SDK ,simulated bank APIs
 
-- 🎧 Voice: Google Cloud Speech (transcription + audio output)/Whisper+OpenAi-tts
+- Voice: Google Cloud Speech (transcription + audio output)/Whisper+OpenAi-tts
 
-- 🌐 Frontend: React, TailwindCSS, Vercel
+- Frontend: React, TailwindCSS, Vercel
 
 ## 💬 Example Commands
 
