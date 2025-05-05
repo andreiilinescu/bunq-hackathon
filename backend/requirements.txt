@@ -3,3 +3,6 @@ bunq_sdk
 flask
 flask_cors
 openai-agents
+gunicorn
+google_cloud_speech
+google-cloud-texttospeech
