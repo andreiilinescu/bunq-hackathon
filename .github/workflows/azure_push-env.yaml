@@ -6,6 +6,7 @@ on:
     push:
         branches:
             - main # Or your primary branch
+            - develop
         paths:
             - "**" # You might want to restrict this to specific paths if needed
         # Add the condition to check the commit message
