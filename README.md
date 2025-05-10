@@ -30,3 +30,6 @@ Gideon is a voice-enabled banking assistant that makes managing money as easy as
 -   “Send 20 euros to Alice for lunch”
 -   “What’s my account balance?”
 -   “Create a payment link for 10 euros – coffee”
+
+
+.
