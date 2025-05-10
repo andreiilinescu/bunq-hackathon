@@ -1,4 +1,6 @@
 #!/bin/bash
+# Example usage:
+# ./pushToOrigin.sh main "Add new feature"
 
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <branch> <commit-message>"
@@ -14,6 +16,8 @@ if [ "$CURRENT_BRANCH" != "$BRANCH" ]; then
     echo "Error: You are on branch '$CURRENT_BRANCH', but you specified '$BRANCH'."
     exit 1
 fi
+
+./push-env.sh
 
 git add .
 git commit -m "$COMMIT_MSG"
