@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose Flask’s default port
-EXPOSE 5000
+EXPOSE 5005
 
 # Use Gunicorn for production
 CMD ["python", "server.py"]

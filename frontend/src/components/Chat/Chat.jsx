@@ -100,15 +100,17 @@ const Chat = () => {
 	};
 	const sendMessageToAPI = async (message) => {
 		console.log("Sending message to API:", message);
+		const payload = {
+			message: message,
+			requestAudio: reciteMessages,
+		};
+		console.log("sending this payload", payload);
 		const response = await fetch(BACKEND_URL_CHAT, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: JSON.stringify({
-				message: message,
-				requestAudio: reciteMessages,
-			}),
+			body: JSON.stringify(payload),
 		});
 		const responseData = await response.json();
 

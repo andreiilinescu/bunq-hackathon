@@ -1,6 +1,6 @@
 openai
 bunq_sdk
-flask
+flask[async]
 flask_cors
 openai-agents
 gunicorn
