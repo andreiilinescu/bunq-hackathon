@@ -60,8 +60,8 @@ jobs:
               env:
                   # pulled from GitHub Secrets
                   STORAGE_ACCOUNT_NAME: ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }}
-                  CONTAINER_NAME: ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}
-                  AZURE_ROOT_PATH: ${{ secrets.AZURE_STORAGE_ROOT_PATH }}
+                  CONTAINER_NAME: ${{ secrets.AZURE_STORAGE_ENV_BLOB_CONTAINER_NAME }}
+                  AZURE_ROOT_PATH: ${{ secrets.AZURE_STORAGE_PATH_FROM_BLOB_CONTAINER_ROOT }}
             # ──────────────────────────────────────────────────────
             # This step logs in to Azure using the service principal credentials
 
