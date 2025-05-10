@@ -35,6 +35,36 @@ jobs:
               with:
                   creds: ${{ secrets.AZURE_CREDENTIALS_JSON }}
 
+                  # ──────────────────────────────────────────────────────
+            - name: Download .env files from storage
+              uses: azure/cli@v2
+              with:
+                  inlineScript: |
+                      # list must match what you uploaded
+                      FILES_TO_MANAGE=( "backend/.env" "frontend/.env" )
+
+                      for local_path in "${FILES_TO_MANAGE[@]}"; do
+                        # ensure the directory exists in the runner workspace
+                        mkdir -p "$(dirname "$local_path")"
+
+                        echo "Downloading $local_path …"
+
+                        az storage blob download \
+                        --account-name "$STORAGE_ACCOUNT_NAME" \
+                        --container-name "$CONTAINER_NAME" \
+                        --name "$AZURE_ROOT_PATH/$local_path" \
+                        --file "$local_path" \
+                        --auth-mode login \
+                        --overwrite true
+                      done
+              env:
+                  # pulled from GitHub Secrets
+                  STORAGE_ACCOUNT_NAME: ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }}
+                  CONTAINER_NAME: ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}
+                  AZURE_ROOT_PATH: ${{ secrets.AZURE_STORAGE_ROOT_PATH }}
+            # ──────────────────────────────────────────────────────
+            # This step logs in to Azure using the service principal credentials
+
             # --- Backend Build and Push ---
             - name: Build and push Backend Docker image
               uses: docker/build-push-action@v5
@@ -75,6 +105,15 @@ jobs:
                       ${{ secrets.AZURE_CONTAINER_APP_NAME_FRONTEND }}
                       # Use the same timestamp tag for deployment
                   imageToDeploy: ${{ secrets.AZURE_ACR_URL }}/${{ secrets.AZURE_ACR_REPOSITORY_NAME_FRONTEND }}:${{ steps.timestamp.outputs.TAG }}
+
+              # --- Verify .env files placement ---
+            - name: Verify .env files placement
+              shell: bash
+              run: |
+                  # ensure script is executable
+                  chmod +x scripts/folderTreeGenerator.sh
+                  # print the tree of your workspace
+                  ./scripts/folderTreeGenerator.sh
 
             # --- Logout ---
             - name: Azure logout
