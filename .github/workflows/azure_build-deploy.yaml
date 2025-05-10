@@ -63,7 +63,15 @@ jobs:
                   CONTAINER_NAME: ${{ secrets.AZURE_STORAGE_ENV_BLOB_CONTAINER_NAME }}
                   AZURE_ROOT_PATH: ${{ secrets.AZURE_STORAGE_PATH_FROM_BLOB_CONTAINER_ROOT }}
             # ──────────────────────────────────────────────────────
-            # This step logs in to Azure using the service principal credentials
+
+            # --- Verify .env files placement ---
+            - name: Verify .env files placement
+              shell: bash
+              run: |
+                  # ensure script is executable
+                  chmod +x scripts/folderTreeGenerator.sh
+                  # print the tree of your workspace
+                  ./scripts/folderTreeGenerator.sh
 
             # --- Backend Build and Push ---
             - name: Build and push Backend Docker image
@@ -105,15 +113,6 @@ jobs:
                       ${{ secrets.AZURE_CONTAINER_APP_NAME_FRONTEND }}
                       # Use the same timestamp tag for deployment
                   imageToDeploy: ${{ secrets.AZURE_ACR_URL }}/${{ secrets.AZURE_ACR_REPOSITORY_NAME_FRONTEND }}:${{ steps.timestamp.outputs.TAG }}
-
-              # --- Verify .env files placement ---
-            - name: Verify .env files placement
-              shell: bash
-              run: |
-                  # ensure script is executable
-                  chmod +x scripts/folderTreeGenerator.sh
-                  # print the tree of your workspace
-                  ./scripts/folderTreeGenerator.sh
 
             # --- Logout ---
             - name: Azure logout
